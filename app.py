@@ -3,11 +3,9 @@ from flask_socketio import SocketIO
 from flask_cors import CORS
 
 app = Flask(__name__)
-# อนุญาตให้หน้าเว็บเชื่อมต่อเข้ามาได้
 CORS(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
-# ตัวแปรจำลองฐานข้อมูล
 current_ev_data = {
     "status_color": "gray",
     "voltage": 0.00,
@@ -19,13 +17,12 @@ current_ev_data = {
 def index():
     return "EV Dashboard API is running!"
 
-# 🟢 นี่คือส่วนสำคัญที่ Render ตามหาครับ! 🟢
+# 🟢 ส่วนนี้แหละครับที่เซิร์ฟเวอร์กำลังตามหา! 🟢
 @app.route('/api/update', methods=['POST'])
 def update_data():
     global current_ev_data
     try:
         data = request.get_json()
-        
         if 'status_color' in data: current_ev_data['status_color'] = data['status_color']
         if 'voltage' in data: current_ev_data['voltage'] = float(data['voltage'])
         if 'measure_mode' in data: current_ev_data['measure_mode'] = data['measure_mode']
