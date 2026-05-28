@@ -264,7 +264,7 @@ export default function App() {
       <div className="w-full flex justify-between items-center mb-10 mt-4">
         {showPill ? (
           <div className="px-5 py-2 rounded-2xl bg-white/60 border border-white/80 text-blue-600 text-sm font-semibold flex items-center gap-2 shadow-sm backdrop-blur-md">
-            <ShieldCheck size={18} /> Secure Session
+            <ShieldCheck size={18} /> {t.secureSession}
           </div>
         ) : <div />}
         <div className="flex items-center gap-3">
@@ -272,7 +272,7 @@ export default function App() {
             <div className="w-9 h-9 rounded-full bg-slate-200 overflow-hidden shadow-inner">
               <img src={user?.picture || "https://api.dicebear.com/7.x/avataaars/svg?seed=Glass"} alt="avatar" />
             </div>
-            <span className="text-sm font-semibold text-slate-700 truncate max-w-[120px]">{user?.name || "Guest User"}</span>
+            <span className="text-sm font-semibold text-slate-700 truncate max-w-[120px]">{user?.name || t.guestUser}</span>
           </div>
           <button onClick={handleLogout} className="bg-red-50 hover:bg-red-500 hover:text-white text-red-500 p-3 rounded-2xl transition-all shadow-sm border border-red-100">
             <LogOut size={18} />
@@ -300,9 +300,38 @@ export default function App() {
       cancel: "ยกเลิก",
       save: "บันทึก",
       noDevices: "ยังไม่มีเครื่อง — เพิ่มเครื่องเพื่อเริ่มดูข้อมูล",
+      posShortTitle: "(+) ไฟฟ้าลัดวงจรขั้วบวก",
+      negShortTitle: "(-) ไฟฟ้าลัดวงจรขั้วลบ",
+      detected: "พบความผิดปกติ",
+      clear: "ปกติ",
+      chartTitle: "กราฟประวัติแรงดันไฟฟ้า",
+      noHistory: "ไม่มีประวัติ เปิดใช้งานบันทึกอัตโนมัติเพื่อบันทึกข้อมูล",
+      saveNow: "บันทึกตอนนี้",
+      autoSaveTitle: "ตั้งค่าบันทึกอัตโนมัติ",
+      seconds: "วินาที",
+      minutes: "นาที",
+      hours: "ชั่วโมง",
+      startAutoSave: "เริ่มบันทึกอัตโนมัติ",
+      stopAutoSave: "หยุดบันทึกอัตโนมัติ",
+      recordedValues: "ค่าที่บันทึกไว้",
+      downloadCSV: "ดาวน์โหลด CSV",
+      clearData: "ล้างข้อมูล",
+      dateCol: "วันที่",
+      timeCol: "เวลา",
+      voltCol: "แรงดันไฟฟ้า (V)",
+      noRecords: "ไม่มีค่าที่บันทึกไว้",
+      live: "เรียลไทม์",
+      back: "กลับ",
+      online: "ออนไลน์",
+      offline: "ออฟไลน์",
+      guestUser: "ผู้เยี่ยมชม",
+      secureSession: "เซสชั่นปลอดภัย",
+      critical: "อันตราย",
+      warning: "ระวัง",
+      normal: "ปกติ",
     },
     GB: {
-      title: "Voltage Monitoring",
+      title: "Voltage Monitoring System",
       subtitle: "Sign in to access your secure dashboard",
       loginBtn: "Continue with Google",
       devices: "My Devices",
@@ -317,6 +346,35 @@ export default function App() {
       cancel: "Cancel",
       save: "Save",
       noDevices: "No devices yet — add a device to start viewing data",
+      posShortTitle: "(+) Positive Short",
+      negShortTitle: "(-) Negative Short",
+      detected: "DETECTED",
+      clear: "CLEAR",
+      chartTitle: "Voltage History Chart",
+      noHistory: "No history. Enable Auto Save to record data.",
+      saveNow: "Save Now",
+      autoSaveTitle: "Auto Save Settings",
+      seconds: "Seconds",
+      minutes: "Minutes",
+      hours: "Hours",
+      startAutoSave: "Start Auto Save",
+      stopAutoSave: "Stop Auto Save",
+      recordedValues: "Recorded Values",
+      downloadCSV: "Download CSV",
+      clearData: "Clear Data",
+      dateCol: "Date",
+      timeCol: "Time",
+      voltCol: "Voltage (V)",
+      noRecords: "No recorded values.",
+      live: "LIVE",
+      back: "Back",
+      online: "Online",
+      offline: "Offline",
+      guestUser: "Guest User",
+      secureSession: "Secure Session",
+      critical: "CRITICAL",
+      warning: "WARNING",
+      normal: "NORMAL",
     },
     CN: {
       title: "电压监测系统",
@@ -334,9 +392,38 @@ export default function App() {
       cancel: "取消",
       save: "保存",
       noDevices: "暂无设备 — 添加设备以开始查看数据",
+      posShortTitle: "(+) 正极短路",
+      negShortTitle: "(-) 负极短路",
+      detected: "检测到异常",
+      clear: "正常",
+      chartTitle: "电压历史图表",
+      noHistory: "暂无历史记录。启用自动保存以记录数据。",
+      saveNow: "立即保存",
+      autoSaveTitle: "自动保存设置",
+      seconds: "秒",
+      minutes: "分钟",
+      hours: "小时",
+      startAutoSave: "开始自动保存",
+      stopAutoSave: "停止自动保存",
+      recordedValues: "记录值",
+      downloadCSV: "下载 CSV",
+      clearData: "清除数据",
+      dateCol: "日期",
+      timeCol: "时间",
+      voltCol: "电压 (V)",
+      noRecords: "无记录值。",
+      live: "实时",
+      back: "返回",
+      online: "在线",
+      offline: "离线",
+      guestUser: "访客",
+      secureSession: "安全会话",
+      critical: "危险",
+      warning: "警告",
+      normal: "正常",
     },
     JP: {
-      title: "電圧モニタリング",
+      title: "電圧モニタリングシステム",
       subtitle: "ログインしてダッシュボードにアクセス",
       loginBtn: "Googleで続ける",
       devices: "マイデバイス",
@@ -351,9 +438,43 @@ export default function App() {
       cancel: "キャンセル",
       save: "保存",
       noDevices: "デバイスがありません — デバイスを追加してデータ表示を開始",
+      posShortTitle: "(+) 正極ショート",
+      negShortTitle: "(-) 負極ショート",
+      detected: "異常検出",
+      clear: "正常",
+      chartTitle: "電圧履歴チャート",
+      noHistory: "履歴なし。自動保存を有効にしてデータを記録してください。",
+      saveNow: "今すぐ保存",
+      autoSaveTitle: "自動保存設定",
+      seconds: "秒",
+      minutes: "分",
+      hours: "時間",
+      startAutoSave: "自動保存を開始",
+      stopAutoSave: "自動保存を停止",
+      recordedValues: "記録された値",
+      downloadCSV: "CSVをダウンロード",
+      clearData: "データをクリア",
+      dateCol: "日付",
+      timeCol: "時間",
+      voltCol: "電圧 (V)",
+      noRecords: "記録された値はありません。",
+      live: "ライブ",
+      back: "戻る",
+      online: "オンライン",
+      offline: "オフライン",
+      guestUser: "ゲストユーザー",
+      secureSession: "セキュアセッション",
+      critical: "危険",
+      warning: "警告",
+      normal: "正常",
     }
   };
   const t = textData[lang] || textData.GB;
+
+  // Update Document Title based on language
+  useEffect(() => {
+    document.title = t.title;
+  }, [t.title]);
 
   // Screens
   const login = useGoogleLogin({
@@ -484,7 +605,7 @@ export default function App() {
                                ${dev.isOnline ? 'bg-green-50 border-green-200 text-green-600' : 'bg-slate-100 border-slate-200 text-slate-500'}`}
                              >
                                <div className={`w-1.5 h-1.5 rounded-full ${dev.isOnline ? 'bg-green-500 animate-pulse' : 'bg-slate-400'}`}></div>
-                               {dev.isOnline ? 'Online' : 'Offline'}
+                               {dev.isOnline ? t.online : t.offline}
                              </div>
                           </div>
                           <p className="text-xs text-slate-500">{dev.id}</p>
@@ -549,7 +670,7 @@ export default function App() {
           </div>
           
           <button onClick={() => setScreen('devices')} className="mx-auto mt-12 glass-btn px-6 py-3 flex items-center gap-2">
-            <ArrowLeft size={18} /> Back
+            <ArrowLeft size={18} /> {t.back}
           </button>
         </div>
       </div>
@@ -575,7 +696,7 @@ export default function App() {
             ))}
           </div>
           <button onClick={() => setScreen('mode')} className="mt-10 mx-auto glass-btn px-6 py-3 flex items-center gap-2">
-            <ArrowLeft size={18} /> Back
+            <ArrowLeft size={18} /> {t.back}
           </button>
         </div>
       </div>
@@ -601,7 +722,7 @@ export default function App() {
           </div>
           <div className="flex items-center gap-2 bg-green-50 px-4 py-2 rounded-full border border-green-200">
             <Wifi size={16} className="text-green-500" />
-            <span className="text-green-600 font-semibold text-sm">LIVE</span>
+            <span className="text-green-600 font-semibold text-sm">{t.live}</span>
           </div>
         </div>
 
@@ -628,7 +749,7 @@ export default function App() {
                      'bg-green-50 border-green-200 text-green-600'}`}
                  >
                    <CheckCircle2 size={18} />
-                   {isDanger ? 'CRITICAL' : isWarning ? 'WARNING' : 'NORMAL'}
+                   {isDanger ? t.critical : isWarning ? t.warning : t.normal}
                  </div>
               </div>
 
@@ -645,12 +766,12 @@ export default function App() {
                    }}
                    className="glass-btn py-3.5 flex items-center justify-center gap-2 font-semibold"
                  >
-                   <Download size={18} /> Save Now
+                   <Download size={18} /> {t.saveNow}
                  </button>
                  
                  <div className="flex flex-col gap-3 p-4 bg-white/40 border border-white/60 rounded-xl shadow-sm">
                    <div className="flex items-center justify-between">
-                     <span className="text-sm font-bold text-slate-700">Auto Save Settings</span>
+                     <span className="text-sm font-bold text-slate-700">{t.autoSaveTitle}</span>
                    </div>
                    <div className="flex gap-2">
                      <input 
@@ -667,9 +788,9 @@ export default function App() {
                        disabled={isRecording}
                        className="flex-1 bg-white border border-slate-200 rounded-lg px-2 py-2 text-sm font-semibold outline-none text-slate-700 disabled:opacity-50"
                      >
-                       <option value="seconds">Seconds (วิ)</option>
-                       <option value="minutes">Minutes (นาที)</option>
-                       <option value="hours">Hours (ชม.)</option>
+                       <option value="seconds">{t.seconds}</option>
+                       <option value="minutes">{t.minutes}</option>
+                       <option value="hours">{t.hours}</option>
                      </select>
                    </div>
                    <button 
@@ -677,7 +798,7 @@ export default function App() {
                      className={`py-2.5 mt-1 flex items-center justify-center gap-2 rounded-lg font-semibold transition-all shadow-sm
                        ${isRecording ? 'bg-red-50 border border-red-200 text-red-500 hover:bg-red-100' : 'bg-slate-800 text-white hover:bg-slate-700'}`}
                    >
-                     {isRecording ? 'Stop Auto Save' : 'Start Auto Save'}
+                     {isRecording ? t.stopAutoSave : t.startAutoSave}
                    </button>
                  </div>
               </div>
@@ -694,8 +815,8 @@ export default function App() {
                    <Zap size={24} />
                  </div>
                  <div>
-                   <span className="font-bold text-lg text-slate-800 block">(+) Positive Short</span>
-                   <span className={`text-sm font-semibold ${posShort ? 'text-red-500' : 'text-slate-400'}`}>{posShort ? 'DETECTED' : 'CLEAR'}</span>
+                   <span className="font-bold text-lg text-slate-800 block">{t.posShortTitle}</span>
+                   <span className={`text-sm font-semibold ${posShort ? 'text-red-500' : 'text-slate-400'}`}>{posShort ? t.detected : t.clear}</span>
                  </div>
               </div>
               <div className="glass-panel p-6 flex items-center gap-4">
@@ -703,8 +824,8 @@ export default function App() {
                    <Zap size={24} />
                  </div>
                  <div>
-                   <span className="font-bold text-lg text-slate-800 block">(-) Negative Short</span>
-                   <span className={`text-sm font-semibold ${negShort ? 'text-red-500' : 'text-slate-400'}`}>{negShort ? 'DETECTED' : 'CLEAR'}</span>
+                   <span className="font-bold text-lg text-slate-800 block">{t.negShortTitle}</span>
+                   <span className={`text-sm font-semibold ${negShort ? 'text-red-500' : 'text-slate-400'}`}>{negShort ? t.detected : t.clear}</span>
                  </div>
               </div>
             </div>
@@ -712,14 +833,14 @@ export default function App() {
             {/* Chart */}
             <div className="glass-panel p-8 flex flex-col min-h-[350px]">
               <div className="flex justify-between items-center mb-6">
-                 <h3 className="font-bold text-xl text-slate-800 tracking-tight">Voltage History Chart</h3>
+                 <h3 className="font-bold text-xl text-slate-800 tracking-tight">{t.chartTitle}</h3>
               </div>
               
               <div className="w-full mt-4 h-[280px]">
                 {history.length === 0 ? (
                   <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 gap-3">
                     <Activity size={48} strokeWidth={1} />
-                    <span className="text-sm font-medium">No history. Enable Auto Save to record data.</span>
+                    <span className="text-sm font-medium">{t.noHistory}</span>
                   </div>
                 ) : (
                   <ResponsiveContainer width="100%" height="100%">
@@ -753,13 +874,13 @@ export default function App() {
             {/* Data Table */}
             <div className="glass-panel p-8 flex flex-col max-h-[400px]">
               <div className="flex justify-between items-center mb-6">
-                 <h3 className="font-bold text-xl text-slate-800 tracking-tight">Recorded Values</h3>
+                 <h3 className="font-bold text-xl text-slate-800 tracking-tight">{t.recordedValues}</h3>
                  <div className="flex gap-2">
                    <button onClick={downloadCSV} className="glass-btn px-4 py-2 text-sm flex items-center gap-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50">
-                     <Download size={16} /> Download CSV
+                     <Download size={16} /> {t.downloadCSV}
                    </button>
                    <button onClick={() => setHistory([])} className="glass-btn px-4 py-2 text-sm flex items-center gap-2 text-red-500 hover:text-red-600 hover:bg-red-50 hover:border-red-200">
-                     <Trash2 size={16} /> Clear Data
+                     <Trash2 size={16} /> {t.clearData}
                    </button>
                  </div>
               </div>
@@ -768,9 +889,9 @@ export default function App() {
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="border-b border-slate-200">
-                      <th className="py-3 px-4 font-semibold text-slate-500 text-sm">Date</th>
-                      <th className="py-3 px-4 font-semibold text-slate-500 text-sm">Time</th>
-                      <th className="py-3 px-4 font-semibold text-slate-500 text-sm text-right">Voltage (V)</th>
+                      <th className="py-3 px-4 font-semibold text-slate-500 text-sm">{t.dateCol}</th>
+                      <th className="py-3 px-4 font-semibold text-slate-500 text-sm">{t.timeCol}</th>
+                      <th className="py-3 px-4 font-semibold text-slate-500 text-sm text-right">{t.voltCol}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -783,7 +904,7 @@ export default function App() {
                     ))}
                     {history.length === 0 && (
                       <tr>
-                        <td colSpan="3" className="py-8 text-center text-slate-400 text-sm font-medium">No recorded values.</td>
+                        <td colSpan="3" className="py-8 text-center text-slate-400 text-sm font-medium">{t.noRecords}</td>
                       </tr>
                     )}
                   </tbody>
