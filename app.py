@@ -1,58 +1,58 @@
 from flask import Flask, request, jsonify
-from flask_socketio import SocketIO
 from flask_cors import CORS
+from datetime import datetime
 
 app = Flask(__name__)
+# ต้องมี CORS เพื่อให้หน้าเว็บ React ดึงข้อมูลข้ามโดเมนได้
 CORS(app)
-socketio = SocketIO(app, cors_allowed_origins="*")
 
-# 🗂️ 1. เปลี่ยนมาใช้ Dictionary เพื่อเก็บข้อมูลแยกตามรายเครื่อง
-all_devices_data = {}
+# ตัวแปรจำลองสำหรับเก็บข้อมูล (ถ้าใช้จริงอาจจะบันทึกลง Database)
+devices_data = {}
 
-@app.route('/', methods=['GET'])
-def index():
-    return "EV Dashboard API: Multi-Device Server is running!"
-
-@app.route('/api/update', methods=['POST'])
-def update_data():
-    global all_devices_data
-    try:
-        data = request.get_json()
-        
-        # 🔑 2. ตรวจสอบว่ามีป้ายชื่อ (device_id) ส่งมาด้วยไหม
+@app.route('/api/voltage', methods=['GET', 'POST'])
+def handle_voltage():
+    
+    # -----------------------------------------------------
+    # 1. ส่วนนี้สำหรับรับข้อมูล (POST) จากสคริปต์ Python ของคุณ
+    # -----------------------------------------------------
+    if request.method == 'POST':
+        data = request.json
+        if not data:
+            return jsonify({"error": "No JSON data provided"}), 400
+            
         device_id = data.get('device_id')
         if not device_id:
-            return jsonify({"status": "error", "message": "ต้องระบุ device_id เสมอ"}), 400
-
-        # 🆕 3. ถ้าเป็นเครื่องใหม่ที่เพิ่งเคยส่งข้อมูลมาครั้งแรก ให้สร้างตู้ล็อกเกอร์ให้ก่อน
-        if device_id not in all_devices_data:
-            all_devices_data[device_id] = {
-                "status_color": "gray",
-                "voltage": 0.00,
-                "measure_mode": "auto",
-                "manual_v_level": 48
-            }
-
-        # 🔄 4. อัปเดตข้อมูลเฉพาะเครื่องนั้นๆ (เก็บลงตู้ให้ถูกคน)
-        if 'status_color' in data: all_devices_data[device_id]['status_color'] = data['status_color']
-        if 'voltage' in data: all_devices_data[device_id]['voltage'] = float(data['voltage'])
-        if 'measure_mode' in data: all_devices_data[device_id]['measure_mode'] = data['measure_mode']
-        if 'manual_v_level' in data: all_devices_data[device_id]['manual_v_level'] = int(data['manual_v_level'])
-
-        # 🚀 5. ส่งข้อมูลขึ้นหน้าเว็บ โดยพ่วง device_id ไปด้วย หน้าเว็บจะได้รู้ว่าเข็มของเครื่องไหนต้องกระดิก
-        emit_data = all_devices_data[device_id].copy()
-        emit_data['device_id'] = device_id
-        socketio.emit('ev_data_stream', emit_data)
-
-        return jsonify({"status": "success", "message": f"อัปเดตข้อมูลของเครื่อง {device_id} สำเร็จ"}), 200
-
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 400
-
-@app.route('/api/current', methods=['GET'])
-def get_current_data():
-    # ดึงข้อมูลของทุกเครื่องมาดูได้เลย (มีประโยชน์ตอนทำหน้า Dashboard รวม)
-    return jsonify(all_devices_data), 200
+            return jsonify({"error": "Missing device_id"}), 400
+            
+        # อัปเดตข้อมูลล่าสุดของเครื่องนั้นๆ
+        devices_data[device_id] = {
+            "device_id": device_id,
+            "voltage": data.get('voltage', 0),
+            "posShort": data.get('posShort', False),
+            "negShort": data.get('negShort', False),
+            "last_updated": datetime.now().isoformat()
+        }
+        
+        return jsonify({"message": "Data received successfully", "status": "success"}), 200
+        
+    # -----------------------------------------------------
+    # 2. ส่วนนี้คือ "ทางออกข้อมูล" (GET) สำหรับส่งไปให้หน้าเว็บ React
+    # -----------------------------------------------------
+    elif request.method == 'GET':
+        device_id = request.args.get('device_id')
+        
+        if not device_id:
+            return jsonify({"error": "Missing device_id parameter in query string"}), 400
+            
+        # ค้นหาข้อมูลเครื่องนั้นจากที่เคย POST เข้ามา
+        device = devices_data.get(device_id)
+        
+        if not device:
+            # ถ้ายังไม่เคยมีข้อมูลเข้ามาเลย ให้ตอบ 404 (หน้าเว็บจะขึ้น Offline)
+            return jsonify({"error": "Device not found or offline"}), 404
+            
+        # ถ้ามีข้อมูล ให้ส่งข้อมูล JSON กลับไป (หน้าเว็บจะขึ้น Online)
+        return jsonify(device), 200
 
 if __name__ == '__main__':
-    socketio.run(app, host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5000)
