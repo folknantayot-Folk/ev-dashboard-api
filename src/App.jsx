@@ -536,7 +536,7 @@ export default function App() {
         
         <div className="flex-1 flex flex-col items-center justify-center -mt-10">
           <div className="text-center mb-10">
-            <h1 className="text-4xl font-bold tracking-tight text-slate-800 mb-3">{t.devices}</h1>
+            <h1 className="text-4xl font-bold tracking-tight text-slate-800 mb-3">{t.title}</h1>
             <LanguageSelector />
           </div>
 
