@@ -130,22 +130,41 @@ export default function App() {
     
     const interval = setInterval(() => {
       devicesList.forEach(async (dev) => {
-        if (!dev.isOnline) {
-          try {
-            // Actively fetch real data payload for this specific Device ID
-            const res = await fetch(`${API_ENDPOINT}?device_id=${dev.id}`);
-            if (res.ok) {
-              const data = await res.json();
-              // If the fetch response contains valid data for the device_id
-              if (data && Object.keys(data).length > 0 && isMounted) {
-                setDevicesList(prev => prev.map(d => 
-                  d.id === dev.id ? { ...d, isOnline: true } : d
-                ));
+        try {
+          const res = await fetch(`${API_ENDPOINT}?device_id=${dev.id}`);
+          if (res.ok) {
+            const data = await res.json();
+            if (data && Object.keys(data).length > 0 && isMounted) {
+              
+              // We compare the exact last_updated string. If it hasn't changed for 3 cycles (6 seconds), it's offline.
+              const currentString = data.last_updated || JSON.stringify(data);
+              
+              if (dev.lastSeenString === currentString) {
+                const unchangedCount = (dev.unchangedCount || 0) + 1;
+                
+                if (unchangedCount > 3) {
+                  if (dev.isOnline) {
+                    setDevicesList(prev => prev.map(d => d.id === dev.id ? { ...d, isOnline: false, unchangedCount } : d));
+                  } else {
+                    setDevicesList(prev => prev.map(d => d.id === dev.id ? { ...d, unchangedCount } : d));
+                  }
+                } else {
+                  setDevicesList(prev => prev.map(d => d.id === dev.id ? { ...d, unchangedCount } : d));
+                }
+              } else {
+                // String changed! Data is fresh!
+                setDevicesList(prev => prev.map(d => d.id === dev.id ? { ...d, isOnline: true, lastSeenString: currentString, unchangedCount: 0 } : d));
               }
+
+            } else if (dev.isOnline && isMounted) {
+              setDevicesList(prev => prev.map(d => d.id === dev.id ? { ...d, isOnline: false } : d));
             }
-          } catch (error) {
-            // Backend unreachable or no valid payload, remains OFFLINE
-            console.error(`Device ${dev.id} offline:`, error);
+          } else if (dev.isOnline && isMounted) {
+            setDevicesList(prev => prev.map(d => d.id === dev.id ? { ...d, isOnline: false } : d));
+          }
+        } catch (error) {
+          if (dev.isOnline && isMounted) {
+            setDevicesList(prev => prev.map(d => d.id === dev.id ? { ...d, isOnline: false } : d));
           }
         }
       });
