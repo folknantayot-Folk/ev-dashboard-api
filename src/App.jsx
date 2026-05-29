@@ -236,7 +236,7 @@ export default function App() {
 
   // UI Components
   const LanguageSelector = () => (
-    <div className="flex bg-white/50 backdrop-blur-md p-1.5 rounded-2xl border border-white/60 shadow-sm">
+    <div className="flex w-max mx-auto bg-white/50 backdrop-blur-md p-1.5 rounded-2xl border border-white/60 shadow-sm">
       {['TH', 'GB', 'CN', 'JP'].map(l => (
         <button 
           key={l} 
