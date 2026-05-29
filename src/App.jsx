@@ -101,10 +101,12 @@ export default function App() {
   const [mode, setMode] = useState('');
   const [range, setRange] = useState(400); 
   
-  // Custom Devices State
   const [devicesList, setDevicesList] = useState(() => {
     const saved = localStorage.getItem('ev_devices');
     return saved ? JSON.parse(saved) : [];
+  });
+  const [activeDeviceId, setActiveDeviceId] = useState(() => {
+    return localStorage.getItem('ev_active_device') || null;
   });
   const [showAddForm, setShowAddForm] = useState(false);
   const [newDeviceId, setNewDeviceId] = useState('');
@@ -114,6 +116,12 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('ev_devices', JSON.stringify(devicesList));
   }, [devicesList]); 
+
+  useEffect(() => {
+    if (activeDeviceId) {
+      localStorage.setItem('ev_active_device', activeDeviceId);
+    }
+  }, [activeDeviceId]); 
 
   // Real API pinging for device data
   useEffect(() => {
@@ -160,9 +168,14 @@ export default function App() {
   const [posShort, setPosShort] = useState(false);
   const [negShort, setNegShort] = useState(false);
 
+  const posShortRef = React.useRef(false);
+  const negShortRef = React.useRef(false);
+
   useEffect(() => {
     voltageRef.current = voltage;
-  }, [voltage]);
+    posShortRef.current = posShort;
+    negShortRef.current = negShort;
+  }, [voltage, posShort, negShort]);
 
   // Real API Fetch Logic
   useEffect(() => {
@@ -177,8 +190,8 @@ export default function App() {
       interval = setInterval(async () => {
         try {
           if (devicesList.length === 0) return;
-          // Use the first online device, or fallback to the first device in list
-          const activeDevice = devicesList.find(d => d.isOnline) || devicesList[0];
+          // Use the active device, or fallback to the first device in list
+          const activeDevice = devicesList.find(d => d.id === activeDeviceId) || devicesList.find(d => d.isOnline) || devicesList[0];
           const res = await fetch(`${API_ENDPOINT}?device_id=${activeDevice.id}`);
           if (res.ok) {
             const data = await res.json();
@@ -212,7 +225,9 @@ export default function App() {
           return [...prev, { 
             time: timeStr, 
             fullDate: `${dateStr} ${timeStr}`,
-            voltage: parseFloat(voltageRef.current.toFixed(2)) 
+            voltage: parseFloat(voltageRef.current.toFixed(2)),
+            posShort: posShortRef.current,
+            negShort: negShortRef.current
           }];
         });
       }, ms);
@@ -222,8 +237,13 @@ export default function App() {
 
   const downloadCSV = () => {
     if (history.length === 0) return;
-    const headers = "DateTime,Voltage(V)\n";
-    const rows = history.map(h => `"${h.fullDate}",${h.voltage}`).join("\n");
+    const headers = "DateTime,Voltage(V),Status\n";
+    const rows = history.map(h => {
+      let status = "NORMAL";
+      if (h.posShort) status = "(+) SHORT";
+      if (h.negShort) status = "(-) SHORT";
+      return `"${h.fullDate}",${h.voltage},"${status}"`;
+    }).join("\n");
     const blob = new Blob([headers + rows], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -318,6 +338,7 @@ export default function App() {
       clearData: "ล้างข้อมูล",
       dateCol: "วันที่",
       timeCol: "เวลา",
+      statusCol: "สถานะ",
       voltCol: "แรงดันไฟฟ้า (V)",
       noRecords: "ไม่มีค่าที่บันทึกไว้",
       live: "เรียลไทม์",
@@ -364,6 +385,7 @@ export default function App() {
       clearData: "Clear Data",
       dateCol: "Date",
       timeCol: "Time",
+      statusCol: "Status",
       voltCol: "Voltage (V)",
       noRecords: "No recorded values.",
       live: "LIVE",
@@ -410,6 +432,7 @@ export default function App() {
       clearData: "清除数据",
       dateCol: "日期",
       timeCol: "时间",
+      statusCol: "状态",
       voltCol: "电压 (V)",
       noRecords: "无记录值。",
       live: "实时",
@@ -456,6 +479,7 @@ export default function App() {
       clearData: "データをクリア",
       dateCol: "日付",
       timeCol: "時間",
+      statusCol: "状態",
       voltCol: "電圧 (V)",
       noRecords: "記録された値はありません。",
       live: "ライブ",
@@ -593,9 +617,17 @@ export default function App() {
              ) : (!showAddForm && (
                <div className="space-y-3 mb-8">
                  {devicesList.map((dev, idx) => (
-                   <div key={idx} className="bg-white/50 border border-white/80 rounded-2xl p-4 flex justify-between items-center shadow-sm hover:bg-white/70 transition-colors">
+                   <div 
+                     key={idx} 
+                     onClick={() => {
+                        setActiveDeviceId(dev.id);
+                        setScreen('mode');
+                     }}
+                     className={`border rounded-2xl p-4 flex justify-between items-center shadow-sm transition-colors cursor-pointer group
+                       ${activeDeviceId === dev.id ? 'bg-blue-50/80 border-blue-200' : 'bg-white/50 border-white/80 hover:bg-white/70'}`}
+                   >
                       <div className="flex items-center gap-4">
-                        <div className={`p-2.5 rounded-xl ${dev.isOnline ? 'bg-blue-50 text-blue-500' : 'bg-slate-100 text-slate-400'}`}>
+                        <div className={`p-2.5 rounded-xl ${dev.isOnline ? 'bg-blue-100 text-blue-600' : 'bg-slate-100 text-slate-400 group-hover:bg-slate-200'}`}>
                           <Cpu size={20} />
                         </div>
                         <div>
@@ -612,7 +644,11 @@ export default function App() {
                         </div>
                       </div>
                       <button 
-                        onClick={() => setDevicesList(devicesList.filter((_, i) => i !== idx))}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setDevicesList(devicesList.filter((_, i) => i !== idx));
+                          if (activeDeviceId === dev.id) setActiveDeviceId(null);
+                        }}
                         className="text-slate-400 hover:text-red-500 transition-colors p-2"
                       >
                         <Trash2 size={18} />
@@ -621,15 +657,6 @@ export default function App() {
                  ))}
                </div>
              ))}
-
-             <button 
-                disabled={!devicesList.some(d => d.isOnline)}
-                onClick={() => setScreen('mode')}
-                className={`w-full py-4 text-lg flex items-center justify-center gap-3 transition-all ${devicesList.some(d => d.isOnline) ? 'primary-btn' : 'glass-btn opacity-50 cursor-not-allowed'}`}
-             >
-                {t.title}
-                {devicesList.some(d => d.isOnline) && <ArrowRight size={20} />}
-             </button>
           </div>
         </div>
       </div>
@@ -761,7 +788,9 @@ export default function App() {
                      setHistory(prev => [...prev, { 
                        time: now.toLocaleTimeString('th-TH'), 
                        fullDate: `${now.toLocaleDateString('th-TH')} ${now.toLocaleTimeString('th-TH')}`,
-                       voltage: parseFloat(voltage.toFixed(2)) 
+                       voltage: parseFloat(voltage.toFixed(2)),
+                       posShort: posShort,
+                       negShort: negShort
                      }]);
                    }}
                    className="glass-btn py-3.5 flex items-center justify-center gap-2 font-semibold"
@@ -891,6 +920,7 @@ export default function App() {
                     <tr className="border-b border-slate-200">
                       <th className="py-3 px-4 font-semibold text-slate-500 text-sm">{t.dateCol}</th>
                       <th className="py-3 px-4 font-semibold text-slate-500 text-sm">{t.timeCol}</th>
+                      <th className="py-3 px-4 font-semibold text-slate-500 text-sm">{t.statusCol}</th>
                       <th className="py-3 px-4 font-semibold text-slate-500 text-sm text-right">{t.voltCol}</th>
                     </tr>
                   </thead>
@@ -899,12 +929,17 @@ export default function App() {
                       <tr key={i} className="border-b border-slate-100/50 hover:bg-white/40 transition-colors">
                         <td className="py-3 px-4 text-slate-700 font-medium text-sm">{h.fullDate.split(' ')[0]}</td>
                         <td className="py-3 px-4 text-slate-700 font-medium text-sm">{h.time}</td>
+                        <td className="py-3 px-4 text-sm font-semibold">
+                          {h.posShort ? <span className="text-red-500">{t.posShortTitle}</span> : 
+                           h.negShort ? <span className="text-red-500">{t.negShortTitle}</span> : 
+                           <span className="text-green-500">{t.normal}</span>}
+                        </td>
                         <td className="py-3 px-4 font-mono font-bold text-slate-800 text-right">{h.voltage.toFixed(2)}</td>
                       </tr>
                     ))}
                     {history.length === 0 && (
                       <tr>
-                        <td colSpan="3" className="py-8 text-center text-slate-400 text-sm font-medium">{t.noRecords}</td>
+                        <td colSpan="4" className="py-8 text-center text-slate-400 text-sm font-medium">{t.noRecords}</td>
                       </tr>
                     )}
                   </tbody>
