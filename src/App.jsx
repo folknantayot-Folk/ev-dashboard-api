@@ -3,7 +3,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Plus, Trash2, ArrowRight, Zap, Download, Wifi, ArrowLeft, TriangleAlert, Cpu, Activity, Settings2, LogOut, ShieldCheck, CheckCircle2 } from 'lucide-react';
 import { useGoogleLogin, googleLogout } from '@react-oauth/google';
 
-const API_ENDPOINT = "http://127.0.0.1:5000/api/voltage";
+const API_ENDPOINT = "https://ev-dashboard-j1l5.onrender.com/api/voltage";
 
 // SEMI-CIRCULAR GAUGE WITH NEEDLE
 const Gauge = ({ value, max }) => {
@@ -120,8 +120,18 @@ export default function App() {
   useEffect(() => {
     if (activeDeviceId) {
       localStorage.setItem('ev_active_device', activeDeviceId);
+      
+      // ส่งคำขอลงทะเบียนรับแจ้งเตือน Email สำหรับอุปกรณ์นี้
+      if (user && user.email) {
+        const subscribeEndpoint = API_ENDPOINT.replace('/voltage', '/subscribe');
+        fetch(subscribeEndpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ device_id: activeDeviceId, email: user.email })
+        }).catch(err => console.log("Alert subscription omitted in dev mode", err));
+      }
     }
-  }, [activeDeviceId]); 
+  }, [activeDeviceId, user]); 
 
   // Real API pinging for device data
   useEffect(() => {
