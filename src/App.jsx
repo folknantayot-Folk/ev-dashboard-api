@@ -3,7 +3,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Plus, Trash2, ArrowRight, Zap, Download, Wifi, ArrowLeft, TriangleAlert, Cpu, Activity, Settings2, LogOut, ShieldCheck, CheckCircle2 } from 'lucide-react';
 import { useGoogleLogin, googleLogout } from '@react-oauth/google';
 
-const API_ENDPOINT = "https://ev-dashboard-j1l5.onrender.com/api/voltage";
+const API_ENDPOINT = "http://127.0.0.1:5000/api/voltage";
 
 // SEMI-CIRCULAR GAUGE WITH NEEDLE
 const Gauge = ({ value, max }) => {
@@ -136,13 +136,13 @@ export default function App() {
             const data = await res.json();
             if (data && Object.keys(data).length > 0 && isMounted) {
               
-              // We compare the exact last_updated string. If it hasn't changed for 3 cycles (6 seconds), it's offline.
+              // เราจะเช็คว่าถ้าข้อความซ้ำกัน 2 รอบ (ประมาณ 2 วินาที) ถือว่าออฟไลน์ทันที
               const currentString = data.last_updated || JSON.stringify(data);
               
               if (dev.lastSeenString === currentString) {
                 const unchangedCount = (dev.unchangedCount || 0) + 1;
                 
-                if (unchangedCount > 3) {
+                if (unchangedCount > 1) { // ลดเหลือ > 1 คือซ้ำ 2 รอบปุ๊บถือว่าตายเลย
                   if (dev.isOnline) {
                     setDevicesList(prev => prev.map(d => d.id === dev.id ? { ...d, isOnline: false, unchangedCount } : d));
                   } else {
@@ -152,7 +152,7 @@ export default function App() {
                   setDevicesList(prev => prev.map(d => d.id === dev.id ? { ...d, unchangedCount } : d));
                 }
               } else {
-                // String changed! Data is fresh!
+                // ข้อมูลใหม่มา รีเซ็ตการนับและตั้งเป็น ONLINE
                 setDevicesList(prev => prev.map(d => d.id === dev.id ? { ...d, isOnline: true, lastSeenString: currentString, unchangedCount: 0 } : d));
               }
 
@@ -168,7 +168,7 @@ export default function App() {
           }
         }
       });
-    }, 2000);
+    }, 1000); // ดึงข้อมูลทุกๆ 1 วินาที (เดิม 2000)
 
     return () => { 
       isMounted = false; 
