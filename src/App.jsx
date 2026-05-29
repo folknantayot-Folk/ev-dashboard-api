@@ -658,11 +658,13 @@ export default function App() {
                    <div 
                      key={idx} 
                      onClick={() => {
+                        if (!dev.isOnline) return; // Prevent clicking if offline
                         setActiveDeviceId(dev.id);
                         setScreen('mode');
                      }}
-                     className={`border rounded-2xl p-4 flex justify-between items-center shadow-sm transition-colors cursor-pointer group
-                       ${activeDeviceId === dev.id ? 'bg-blue-50/80 border-blue-200' : 'bg-white/50 border-white/80 hover:bg-white/70'}`}
+                     className={`border rounded-2xl p-4 flex justify-between items-center shadow-sm transition-colors group
+                       ${!dev.isOnline ? 'opacity-60 cursor-not-allowed bg-slate-50/50 border-slate-200' : 
+                       (activeDeviceId === dev.id ? 'bg-blue-50/80 border-blue-200 cursor-pointer' : 'bg-white/50 border-white/80 hover:bg-white/70 cursor-pointer')}`}
                    >
                       <div className="flex items-center gap-4">
                         <div className={`p-2.5 rounded-xl ${dev.isOnline ? 'bg-blue-100 text-blue-600' : 'bg-slate-100 text-slate-400 group-hover:bg-slate-200'}`}>
