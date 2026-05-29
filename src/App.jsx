@@ -159,7 +159,7 @@ export default function App() {
   
   // Dashboard State
   const [voltage, setVoltage] = useState(0);
-  const [history, setHistory] = useState([]);
+  const [history, setHistory] = useState({}); // { deviceId: [data...] }
   const [isRecording, setIsRecording] = useState(false);
   const [autoSaveIntervalVal, setAutoSaveIntervalVal] = useState(1);
   const [autoSaveUnit, setAutoSaveUnit] = useState('seconds');
@@ -170,12 +170,14 @@ export default function App() {
 
   const posShortRef = React.useRef(false);
   const negShortRef = React.useRef(false);
+  const activeDeviceRef = React.useRef(activeDeviceId);
 
   useEffect(() => {
     voltageRef.current = voltage;
     posShortRef.current = posShort;
     negShortRef.current = negShort;
-  }, [voltage, posShort, negShort]);
+    activeDeviceRef.current = activeDeviceId;
+  }, [voltage, posShort, negShort, activeDeviceId]);
 
   // Real API Fetch Logic
   useEffect(() => {
@@ -219,16 +221,22 @@ export default function App() {
       
       interval = setInterval(() => {
         setHistory(prev => {
+          const currentId = activeDeviceRef.current;
+          if (!currentId) return prev;
           const now = new Date();
           const dateStr = now.toLocaleDateString('th-TH');
           const timeStr = now.toLocaleTimeString('th-TH');
-          return [...prev, { 
-            time: timeStr, 
-            fullDate: `${dateStr} ${timeStr}`,
-            voltage: parseFloat(voltageRef.current.toFixed(2)),
-            posShort: posShortRef.current,
-            negShort: negShortRef.current
-          }];
+          const deviceHistory = prev[currentId] || [];
+          return {
+            ...prev,
+            [currentId]: [...deviceHistory, { 
+              time: timeStr, 
+              fullDate: `${dateStr} ${timeStr}`,
+              voltage: parseFloat(voltageRef.current.toFixed(2)),
+              posShort: posShortRef.current,
+              negShort: negShortRef.current
+            }]
+          };
         });
       }, ms);
     }
@@ -236,9 +244,10 @@ export default function App() {
   }, [isRecording, screen, autoSaveIntervalVal, autoSaveUnit]);
 
   const downloadCSV = () => {
-    if (history.length === 0) return;
+    const currentHistory = history[activeDeviceId] || [];
+    if (currentHistory.length === 0) return;
     const headers = "DateTime,Voltage(V),Status\n";
-    const rows = history.map(h => {
+    const rows = currentHistory.map(h => {
       let status = "NORMAL";
       if (h.posShort) status = "(+) SHORT";
       if (h.negShort) status = "(-) SHORT";
@@ -866,14 +875,14 @@ export default function App() {
               </div>
               
               <div className="w-full mt-4 h-[280px]">
-                {history.length === 0 ? (
+                {(history[activeDeviceId] || []).length === 0 ? (
                   <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 gap-3">
                     <Activity size={48} strokeWidth={1} />
                     <span className="text-sm font-medium">{t.noHistory}</span>
                   </div>
                 ) : (
                   <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={history} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <AreaChart data={history[activeDeviceId] || []} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                       <defs>
                         <linearGradient id="colorV" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="5%" stopColor="#007aff" stopOpacity={0.3}/>
@@ -908,7 +917,7 @@ export default function App() {
                    <button onClick={downloadCSV} className="glass-btn px-4 py-2 text-sm flex items-center gap-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50">
                      <Download size={16} /> {t.downloadCSV}
                    </button>
-                   <button onClick={() => setHistory([])} className="glass-btn px-4 py-2 text-sm flex items-center gap-2 text-red-500 hover:text-red-600 hover:bg-red-50 hover:border-red-200">
+                   <button onClick={() => setHistory(prev => ({...prev, [activeDeviceId]: []}))} className="glass-btn px-4 py-2 text-sm flex items-center gap-2 text-red-500 hover:text-red-600 hover:bg-red-50 hover:border-red-200">
                      <Trash2 size={16} /> {t.clearData}
                    </button>
                  </div>
@@ -925,7 +934,7 @@ export default function App() {
                     </tr>
                   </thead>
                   <tbody>
-                    {[...history].reverse().map((h, i) => (
+                    {[...(history[activeDeviceId] || [])].reverse().map((h, i) => (
                       <tr key={i} className="border-b border-slate-100/50 hover:bg-white/40 transition-colors">
                         <td className="py-3 px-4 text-slate-700 font-medium text-sm">{h.fullDate.split(' ')[0]}</td>
                         <td className="py-3 px-4 text-slate-700 font-medium text-sm">{h.time}</td>
@@ -937,7 +946,7 @@ export default function App() {
                         <td className="py-3 px-4 font-mono font-bold text-slate-800 text-right">{h.voltage.toFixed(2)}</td>
                       </tr>
                     ))}
-                    {history.length === 0 && (
+                    {(history[activeDeviceId] || []).length === 0 && (
                       <tr>
                         <td colSpan="4" className="py-8 text-center text-slate-400 text-sm font-medium">{t.noRecords}</td>
                       </tr>
@@ -945,12 +954,3 @@ export default function App() {
                   </tbody>
                 </table>
               </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  return null;
-}
