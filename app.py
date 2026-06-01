@@ -99,8 +99,8 @@ def handle_voltage():
             if receiver_email:
                 last_alert = device_last_alert.get(device_id)
                 now = datetime.now()
-                # 5 minute cooldown
-                if last_alert is None or (now - last_alert) > timedelta(minutes=5):
+                # 1 minute cooldown
+                if last_alert is None or (now - last_alert) > timedelta(minutes=1):
                     device_last_alert[device_id] = now
                     # Start thread to send email asynchronously
                     threading.Thread(target=send_alert_email_async, args=(receiver_email, device_id, posShort, negShort)).start()
