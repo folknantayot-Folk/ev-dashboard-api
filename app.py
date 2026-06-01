@@ -16,44 +16,42 @@ devices_data = {}
 device_subscriptions = {} # { "device_id": "user@email.com" }
 device_last_alert = {} # { "device_id": datetime_object }
 
-SENDER_EMAIL = "folksung71@gmail.com"
-SENDER_PASSWORD = "ufww ytpy qrhm mvwr"
+import urllib.request
+import json
 
-def send_alert_email_async(receiver_email, device_id, posShort, negShort):
+GAS_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbye1wUOtxNsoebZ6Duows7ay5QZF42W9ImjXILe2jZy6Uu6JBqe0xsACaV_O2jFbIo/exec"
+
+def send_alert_email_async(receiver_email, device_id, is_pos_short, is_neg_short):
     try:
-        msg = MIMEMultipart()
-        msg['From'] = SENDER_EMAIL
-        msg['To'] = receiver_email
-        msg['Subject'] = f"🚨 แจ้งเตือนฉุกเฉิน: อุปกรณ์ {device_id} เกิดการช็อต!"
+        subject = f"🔴 ด่วน! พบความผิดปกติที่อุปกรณ์ {device_id}"
         
-        short_type = []
-        if posShort: short_type.append("ขั้วบวก (Positive)")
-        if negShort: short_type.append("ขั้วลบ (Negative)")
+        status_text = []
+        if is_pos_short:
+            status_text.append("ขั้วบวกช็อต (+)")
+        if is_neg_short:
+            status_text.append("ขั้วลบช็อต (-)")
+            
+        body = f"""⚠️ แจ้งเตือนความผิดปกติของแบตเตอรี่ ⚠️
+
+อุปกรณ์: {device_id}
+สถานะ: {' และ '.join(status_text)}
+
+ระบบตรวจพบการลัดวงจร โปรดตรวจสอบอุปกรณ์โดยด่วน!
+
+(ส่งอัตโนมัติจากระบบ EV Dashboard)"""
         
-        body = f"""
-        <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #ddd; border-radius: 10px; max-width: 500px; margin: 0 auto;">
-            <h2 style="color: #d9534f; text-align: center;">⚠️ แจ้งเตือนความผิดปกติ</h2>
-            <p style="font-size: 16px;">อุปกรณ์ <b>{device_id}</b> ตรวจพบการช็อตของแบตเตอรี่!</p>
-            <p style="font-size: 16px; background-color: #f9f2f4; padding: 10px; color: #c7254e; border-radius: 5px;">
-                <b>ตำแหน่งที่ช็อต:</b> {', '.join(short_type)}
-            </p>
-            <p style="font-size: 14px; color: #555;">โปรดตรวจสอบอุปกรณ์โดยด่วน!</p>
-            <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
-            <small style="color: #999;">ระบบแจ้งเตือนอัตโนมัติจาก EV Dashboard</small>
-        </div>
-        """
+        payload = json.dumps({
+            "to": receiver_email,
+            "subject": subject,
+            "body": body
+        }).encode('utf-8')
         
-        msg.attach(MIMEText(body, 'html'))
+        req = urllib.request.Request(GAS_WEBHOOK_URL, data=payload, headers={'Content-Type': 'application/json'})
+        response = urllib.request.urlopen(req, timeout=10)
+        print("Email triggered via Webhook:", response.read().decode('utf-8'))
         
-        server = smtplib.SMTP('smtp.gmail.com', 587)
-        server.starttls()
-        server.login(SENDER_EMAIL, SENDER_PASSWORD)
-        text = msg.as_string()
-        server.sendmail(SENDER_EMAIL, receiver_email, text)
-        server.quit()
-        print(f"Alert email sent to {receiver_email} for device {device_id}")
     except Exception as e:
-        print(f"Failed to send email: {e}")
+        print(f"Failed to send email via webhook: {e}")
 
 @app.route('/api/subscribe', methods=['POST', 'OPTIONS'])
 def subscribe_alert():
