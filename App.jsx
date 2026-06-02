@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts';
-import { Plus, Trash2, ArrowRight, Zap, Download, Wifi, ArrowLeft, TriangleAlert, Cpu, Activity, Settings2, LogOut, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { Plus, Trash2, ArrowRight, Zap, Download, Wifi, ArrowLeft, AlertTriangle, Cpu, Activity, Settings2, LogOut, ShieldCheck, CheckCircle2 } from 'lucide-react';
 import { GoogleLogin, googleLogout } from '@react-oauth/google';
 
 const API_ENDPOINT = "https://ev-dashboard-j1l5.onrender.com/api/voltage";
@@ -973,11 +973,11 @@ export default function App() {
                         <td className="py-3 px-4">
                           {h.posShort ? (
                             <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-red-50 text-red-600 border border-red-200 rounded-full text-xs font-bold tracking-wide">
-                              <TriangleAlert size={14} /> {t.posShortTitle.toUpperCase()}
+                              <AlertTriangle size={14} /> {t.posShortTitle.toUpperCase()}
                             </div>
                           ) : h.negShort ? (
                             <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-red-50 text-red-600 border border-red-200 rounded-full text-xs font-bold tracking-wide">
-                              <TriangleAlert size={14} /> {t.negShortTitle.toUpperCase()}
+                              <AlertTriangle size={14} /> {t.negShortTitle.toUpperCase()}
                             </div>
                           ) : (
                             <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-50 text-green-600 border border-green-200 rounded-full text-xs font-bold tracking-wide">
