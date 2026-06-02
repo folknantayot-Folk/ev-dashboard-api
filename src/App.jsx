@@ -911,6 +911,10 @@ export default function App() {
     );
   }
 
+  if (screen === 'admin' && isAdmin) {
+    return <AdminDashboardScreen />;
+  }
+
   if (screen === 'devices') {
     return (
       <div className="min-h-screen p-6 md:p-12 max-w-5xl mx-auto relative z-10 flex flex-col">
