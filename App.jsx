@@ -970,10 +970,20 @@ export default function App() {
                       <tr key={i} className="border-b border-slate-100/50 hover:bg-white/40 transition-colors">
                         <td className="py-3 px-4 text-slate-700 font-medium text-sm">{h.fullDate.split(' ')[0]}</td>
                         <td className="py-3 px-4 text-slate-700 font-medium text-sm">{h.time}</td>
-                        <td className="py-3 px-4 text-sm font-semibold">
-                          {h.posShort ? <span className="text-red-500">{t.posShortTitle}</span> : 
-                           h.negShort ? <span className="text-red-500">{t.negShortTitle}</span> : 
-                           <span className="text-green-500">{t.normal}</span>}
+                        <td className="py-3 px-4">
+                          {h.posShort ? (
+                            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-red-50 text-red-600 border border-red-200 rounded-full text-xs font-bold tracking-wide">
+                              <TriangleAlert size={14} /> {t.posShortTitle.toUpperCase()}
+                            </div>
+                          ) : h.negShort ? (
+                            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-red-50 text-red-600 border border-red-200 rounded-full text-xs font-bold tracking-wide">
+                              <TriangleAlert size={14} /> {t.negShortTitle.toUpperCase()}
+                            </div>
+                          ) : (
+                            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-50 text-green-600 border border-green-200 rounded-full text-xs font-bold tracking-wide">
+                              <CheckCircle2 size={14} /> {t.normal.toUpperCase()}
+                            </div>
+                          )}
                         </td>
                         <td className="py-3 px-4 font-mono font-bold text-slate-800 text-right">{h.voltage.toFixed(2)}</td>
                       </tr>
