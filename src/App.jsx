@@ -681,16 +681,11 @@ export default function App() {
               <p className="text-slate-500 text-sm mb-6">{t.donateDesc || "Help me keep this project alive!"}</p>
               
                <div className="w-48 h-48 bg-slate-100 rounded-2xl mb-6 flex items-center justify-center border-2 border-slate-300 overflow-hidden relative shadow-inner p-2">
-                 <img src="https://promptpay.io/0939596863.png" alt="PromptPay QR" className="w-full h-full object-contain relative z-10 rounded-xl" />
+                 <img src="https://i.ibb.co/bML3q7Y4/9391.jpg" alt="PromptPay QR" className="w-full h-full object-contain relative z-10 rounded-xl" />
               </div>
               
-              <div className="w-full bg-slate-50 p-4 rounded-xl border border-slate-100 text-left">
-                <p className="text-xs text-slate-500 font-medium mb-1">PromptPay / Account</p>
-                <div className="flex justify-between items-center">
-                  <p className="text-sm font-bold text-slate-700 tracking-wide">093-959-6863</p>
-                  <button onClick={() => navigator.clipboard.writeText("0939596863")} className="text-xs text-blue-500 font-bold hover:underline">Copy</button>
-                </div>
-                <p className="text-xs font-medium text-slate-500 mt-1">ชื่อบัญชี: นายนันทยศ รอดอยู่</p>
+              <div className="w-full bg-slate-50 p-4 rounded-xl border border-slate-100 text-center">
+                <p className="text-sm font-bold text-slate-700">ชื่อบัญชี: นายนันทยศ รอดอยู่</p>
               </div>
             </div>
           </div>
