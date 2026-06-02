@@ -275,7 +275,7 @@ export default function App() {
   const downloadCSV = () => {
     const currentHistory = history[activeDeviceId] || [];
     if (currentHistory.length === 0) return;
-    const headers = "DateTime,Voltage(V),Status\n";
+    const headers = "DateTime,Voltage(V),Battery Status,Short Status\n";
     const rows = currentHistory.map(h => {
       const rowPercent = Math.min(Math.max(h.voltage / range, 0), 1);
       const rowIsDanger = rowPercent > 0.8;
@@ -284,10 +284,12 @@ export default function App() {
       let status = "NORMAL";
       if (h.posShort) status = "(+) SHORT";
       else if (h.negShort) status = "(-) SHORT";
-      else if (rowIsDanger) status = "CRITICAL";
-      else if (rowIsWarning) status = "WARNING";
       
-      return `"${h.fullDate}",${h.voltage},"${status}"`;
+      let battStatus = "NORMAL";
+      if (rowIsDanger) battStatus = "CRITICAL";
+      else if (rowIsWarning) battStatus = "WARNING";
+      
+      return `"${h.fullDate}",${h.voltage},"${battStatus}","${status}"`;
     }).join("\n");
     const blob = new Blob([headers + rows], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
@@ -385,7 +387,8 @@ export default function App() {
       clearData: "ล้างข้อมูล",
       dateCol: "วันที่",
       timeCol: "เวลา",
-      statusCol: "สถานะ",
+      statusCol: "สถานะช็อต",
+      battCol: "สถานะแบตเตอรี่",
       voltCol: "แรงดันไฟฟ้า (V)",
       noRecords: "ไม่มีค่าที่บันทึกไว้",
       live: "เรียลไทม์",
@@ -432,7 +435,8 @@ export default function App() {
       clearData: "Clear Data",
       dateCol: "Date",
       timeCol: "Time",
-      statusCol: "Status",
+      statusCol: "Short Status",
+      battCol: "Battery Status",
       voltCol: "Voltage (V)",
       noRecords: "No recorded values.",
       live: "LIVE",
@@ -479,7 +483,8 @@ export default function App() {
       clearData: "清除数据",
       dateCol: "日期",
       timeCol: "时间",
-      statusCol: "状态",
+      statusCol: "短路状态",
+      battCol: "电池状态",
       voltCol: "电压 (V)",
       noRecords: "无记录值。",
       live: "实时",
@@ -526,7 +531,8 @@ export default function App() {
       clearData: "データをクリア",
       dateCol: "日付",
       timeCol: "時間",
-      statusCol: "状態",
+      statusCol: "ショート状態",
+      battCol: "バッテリー状態",
       voltCol: "電圧 (V)",
       noRecords: "記録された値はありません。",
       live: "ライブ",
@@ -968,6 +974,7 @@ export default function App() {
                     <tr className="border-b border-slate-200">
                       <th className="py-3 px-4 font-semibold text-slate-500 text-sm">{t.dateCol}</th>
                       <th className="py-3 px-4 font-semibold text-slate-500 text-sm">{t.timeCol}</th>
+                      <th className="py-3 px-4 font-semibold text-slate-500 text-sm">{t.battCol}</th>
                       <th className="py-3 px-4 font-semibold text-slate-500 text-sm">{t.statusCol}</th>
                       <th className="py-3 px-4 font-semibold text-slate-500 text-sm text-right">{t.voltCol}</th>
                     </tr>
@@ -983,20 +990,6 @@ export default function App() {
                             const rowIsDanger = rowPercent > 0.8;
                             const rowIsWarning = rowPercent > 0.6;
                             
-                            if (h.posShort) {
-                              return (
-                                <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-red-50 text-red-600 border border-red-200 rounded-full text-xs font-bold tracking-wide">
-                                  <AlertTriangle size={14} /> {t.posShortTitle.toUpperCase()}
-                                </div>
-                              );
-                            }
-                            if (h.negShort) {
-                              return (
-                                <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-red-50 text-red-600 border border-red-200 rounded-full text-xs font-bold tracking-wide">
-                                  <AlertTriangle size={14} /> {t.negShortTitle.toUpperCase()}
-                                </div>
-                              );
-                            }
                             if (rowIsDanger) {
                               return (
                                 <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-red-50 text-red-600 border border-red-200 rounded-full text-xs font-bold tracking-wide">
@@ -1018,12 +1011,35 @@ export default function App() {
                             );
                           })()}
                         </td>
+                        <td className="py-3 px-4">
+                          {(() => {
+                            if (h.posShort) {
+                              return (
+                                <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-red-50 text-red-600 border border-red-200 rounded-full text-xs font-bold tracking-wide">
+                                  <AlertTriangle size={14} /> {t.posShortTitle.toUpperCase()}
+                                </div>
+                              );
+                            }
+                            if (h.negShort) {
+                              return (
+                                <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-red-50 text-red-600 border border-red-200 rounded-full text-xs font-bold tracking-wide">
+                                  <AlertTriangle size={14} /> {t.negShortTitle.toUpperCase()}
+                                </div>
+                              );
+                            }
+                            return (
+                              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-50 text-green-600 border border-green-200 rounded-full text-xs font-bold tracking-wide">
+                                <CheckCircle2 size={14} /> {t.normal.toUpperCase()}
+                              </div>
+                            );
+                          })()}
+                        </td>
                         <td className="py-3 px-4 font-mono font-bold text-slate-800 text-right">{h.voltage.toFixed(2)}</td>
                       </tr>
                     ))}
                     {(history[activeDeviceId] || []).length === 0 && (
                       <tr>
-                        <td colSpan="4" className="py-8 text-center text-slate-400 text-sm font-medium">{t.noRecords}</td>
+                        <td colSpan="5" className="py-8 text-center text-slate-400 text-sm font-medium">{t.noRecords}</td>
                       </tr>
                     )}
                   </tbody>
