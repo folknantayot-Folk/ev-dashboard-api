@@ -277,9 +277,16 @@ export default function App() {
     if (currentHistory.length === 0) return;
     const headers = "DateTime,Voltage(V),Status\n";
     const rows = currentHistory.map(h => {
+      const rowPercent = Math.min(Math.max(h.voltage / range, 0), 1);
+      const rowIsDanger = rowPercent > 0.8;
+      const rowIsWarning = rowPercent > 0.6;
+      
       let status = "NORMAL";
       if (h.posShort) status = "(+) SHORT";
-      if (h.negShort) status = "(-) SHORT";
+      else if (h.negShort) status = "(-) SHORT";
+      else if (rowIsDanger) status = "CRITICAL";
+      else if (rowIsWarning) status = "WARNING";
+      
       return `"${h.fullDate}",${h.voltage},"${status}"`;
     }).join("\n");
     const blob = new Blob([headers + rows], { type: 'text/csv;charset=utf-8;' });
@@ -971,19 +978,45 @@ export default function App() {
                         <td className="py-3 px-4 text-slate-700 font-medium text-sm">{h.fullDate.split(' ')[0]}</td>
                         <td className="py-3 px-4 text-slate-700 font-medium text-sm">{h.time}</td>
                         <td className="py-3 px-4">
-                          {h.posShort ? (
-                            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-red-50 text-red-600 border border-red-200 rounded-full text-xs font-bold tracking-wide">
-                              <AlertTriangle size={14} /> {t.posShortTitle.toUpperCase()}
-                            </div>
-                          ) : h.negShort ? (
-                            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-red-50 text-red-600 border border-red-200 rounded-full text-xs font-bold tracking-wide">
-                              <AlertTriangle size={14} /> {t.negShortTitle.toUpperCase()}
-                            </div>
-                          ) : (
-                            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-50 text-green-600 border border-green-200 rounded-full text-xs font-bold tracking-wide">
-                              <CheckCircle2 size={14} /> {t.normal.toUpperCase()}
-                            </div>
-                          )}
+                          {(() => {
+                            const rowPercent = Math.min(Math.max(h.voltage / range, 0), 1);
+                            const rowIsDanger = rowPercent > 0.8;
+                            const rowIsWarning = rowPercent > 0.6;
+                            
+                            if (h.posShort) {
+                              return (
+                                <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-red-50 text-red-600 border border-red-200 rounded-full text-xs font-bold tracking-wide">
+                                  <AlertTriangle size={14} /> {t.posShortTitle.toUpperCase()}
+                                </div>
+                              );
+                            }
+                            if (h.negShort) {
+                              return (
+                                <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-red-50 text-red-600 border border-red-200 rounded-full text-xs font-bold tracking-wide">
+                                  <AlertTriangle size={14} /> {t.negShortTitle.toUpperCase()}
+                                </div>
+                              );
+                            }
+                            if (rowIsDanger) {
+                              return (
+                                <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-red-50 text-red-600 border border-red-200 rounded-full text-xs font-bold tracking-wide">
+                                  <AlertTriangle size={14} /> {t.critical.toUpperCase()}
+                                </div>
+                              );
+                            }
+                            if (rowIsWarning) {
+                              return (
+                                <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-yellow-50 text-yellow-600 border border-yellow-200 rounded-full text-xs font-bold tracking-wide">
+                                  <AlertTriangle size={14} /> {t.warning.toUpperCase()}
+                                </div>
+                              );
+                            }
+                            return (
+                              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-50 text-green-600 border border-green-200 rounded-full text-xs font-bold tracking-wide">
+                                <CheckCircle2 size={14} /> {t.normal.toUpperCase()}
+                              </div>
+                            );
+                          })()}
                         </td>
                         <td className="py-3 px-4 font-mono font-bold text-slate-800 text-right">{h.voltage.toFixed(2)}</td>
                       </tr>
