@@ -153,25 +153,21 @@ export default function App() {
             const data = await res.json();
             if (data && Object.keys(data).length > 0 && isMounted) {
               
-              // เราจะเช็คว่าถ้าข้อความซ้ำกัน 2 รอบ (ประมาณ 2 วินาที) ถือว่าออฟไลน์ทันที
               const currentString = data.last_updated || JSON.stringify(data);
               
-              if (dev.lastSeenString === currentString) {
-                const unchangedCount = (dev.unchangedCount || 0) + 1;
+              // เช็คจาก prev state เพื่อป้องกันบั๊กเวลาดึงข้อมูลถี่เกินไป
+              setDevicesList(prev => prev.map(d => {
+                if (d.id !== dev.id) return d;
                 
-                if (unchangedCount > 1) { // ลดเหลือ > 1 คือซ้ำ 2 รอบปุ๊บถือว่าตายเลย
-                  if (dev.isOnline) {
-                    setDevicesList(prev => prev.map(d => d.id === dev.id ? { ...d, isOnline: false, unchangedCount } : d));
-                  } else {
-                    setDevicesList(prev => prev.map(d => d.id === dev.id ? { ...d, unchangedCount } : d));
-                  }
+                if (d.lastSeenString === currentString) {
+                  const unchangedCount = (d.unchangedCount || 0) + 1;
+                  // ถ้าซ้ำเกิน 2 รอบ (400ms) ให้ถือว่าตาย
+                  return { ...d, isOnline: unchangedCount <= 2, unchangedCount };
                 } else {
-                  setDevicesList(prev => prev.map(d => d.id === dev.id ? { ...d, unchangedCount } : d));
+                  // ข้อมูลใหม่มา รีเซ็ตการนับและตั้งเป็น ONLINE
+                  return { ...d, isOnline: true, lastSeenString: currentString, unchangedCount: 0 };
                 }
-              } else {
-                // ข้อมูลใหม่มา รีเซ็ตการนับและตั้งเป็น ONLINE
-                setDevicesList(prev => prev.map(d => d.id === dev.id ? { ...d, isOnline: true, lastSeenString: currentString, unchangedCount: 0 } : d));
-              }
+              }));
 
             } else if (dev.isOnline && isMounted) {
               setDevicesList(prev => prev.map(d => d.id === dev.id ? { ...d, isOnline: false } : d));
@@ -185,7 +181,7 @@ export default function App() {
           }
         }
       });
-    }, 1000); // ดึงข้อมูลทุกๆ 1 วินาที (เดิม 2000)
+    }, 200); // ดึงข้อมูลทุกๆ 200ms เพื่อความเรียลไทม์สูงสุด
 
     return () => { 
       isMounted = false; 
@@ -267,6 +263,9 @@ export default function App() {
   useEffect(() => {
     let interval;
     if (screen === 'dashboard') {
+      let localUnchangedCount = 0;
+      let localLastSeen = "";
+      
       interval = setInterval(async () => {
         try {
           if (devicesList.length === 0) return;
@@ -276,16 +275,28 @@ export default function App() {
           if (res.ok) {
             const data = await res.json();
             if (data && data.voltage !== undefined) {
-              setVoltage(data.voltage);
-              setPosShort(data.posShort || false);
-              setNegShort(data.negShort || false);
+              const currentString = data.last_updated || JSON.stringify(data);
+              
+              if (localLastSeen === currentString) {
+                localUnchangedCount++;
+                if (localUnchangedCount > 2) {
+                  setVoltage(0); // ตัดค่าเป็น 0 ถ้าออฟไลน์เกิน 3 รอบ (600ms)
+                }
+              } else {
+                localLastSeen = currentString;
+                localUnchangedCount = 0;
+                setVoltage(data.voltage);
+                setPosShort(data.posShort || false);
+                setNegShort(data.negShort || false);
+              }
             }
           }
         } catch (err) {
           // No mock data - keep last known state if backend goes offline
           console.error("Backend fetch failed:", err);
+          setVoltage(0);
         }
-      }, 1000);
+      }, 200); // อัปเดตทุก 200ms เพื่อความเรียลไทม์สูงสุด
     }
     return () => clearInterval(interval);
   }, [screen, range]);
