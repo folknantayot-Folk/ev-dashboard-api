@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts';
-import { Plus, Trash2, ArrowRight, Zap, Download, Wifi, ArrowLeft, AlertTriangle, Cpu, Activity, Settings2, LogOut, ShieldCheck, CheckCircle2, Coffee, X, ScanLine, MessageSquare, Send, UserCog, MailOpen } from 'lucide-react';
+import { Plus, Trash2, ArrowRight, Zap, Download, Wifi, ArrowLeft, AlertTriangle, Cpu, Activity, Settings2, LogOut, ShieldCheck, CheckCircle2, Coffee, X, ScanLine, MessageSquare, Send, UserCog, MailOpen, Crown } from 'lucide-react';
 import { GoogleLogin, googleLogout } from '@react-oauth/google';
 import { db } from './firebase';
 import { collection, addDoc, getDocs, deleteDoc, serverTimestamp, query, orderBy, doc, getDoc, setDoc } from 'firebase/firestore';
@@ -99,6 +99,7 @@ export default function App() {
     return saved ? 'devices' : 'login';
   });
   const [isAdmin, setIsAdmin] = useState(false);
+  const [userRole, setUserRole] = useState('user');
   const [showReportModal, setShowReportModal] = useState(false);
   const [reportText, setReportText] = useState("");
   const [showDonateModal, setShowDonateModal] = useState(false);
@@ -219,27 +220,39 @@ export default function App() {
   useEffect(() => {
     const checkAdmin = async () => {
       if (user?.email) {
+        // อภิสิทธิ์ชน 555 - ล็อคให้เป็น Owner ถาวร
+        if (user.email.toLowerCase() === 'folknantayot@gmail.com') {
+          setIsAdmin(true);
+          setUserRole('owner');
+          try { await setDoc(doc(db, "admins", user.email), { role: "owner", addedAt: serverTimestamp() }, { merge: true }); } catch(e) {}
+          return;
+        }
+
         try {
           // Check if admins collection is completely empty
           const adminSnapshot = await getDocs(collection(db, "admins"));
           if (adminSnapshot.empty) {
             // First user ever becomes master admin automatically!
-            await setDoc(doc(db, "admins", user.email), { role: "master", addedAt: serverTimestamp() });
+            await setDoc(doc(db, "admins", user.email), { role: "admin", addedAt: serverTimestamp() });
             setIsAdmin(true);
+            setUserRole('admin');
             return;
           }
 
           const adminDoc = await getDoc(doc(db, "admins", user.email));
           if (adminDoc.exists()) {
             setIsAdmin(true);
+            setUserRole(adminDoc.data().role || 'admin');
           } else {
             setIsAdmin(false);
+            setUserRole('user');
           }
         } catch (e) {
           console.error("Error checking admin:", e);
         }
       } else {
         setIsAdmin(false);
+        setUserRole('user');
       }
     };
     checkAdmin();
@@ -379,10 +392,22 @@ export default function App() {
             </button>
           )}
           <div className="flex items-center gap-3 bg-white/60 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/80 shadow-sm">
-            <div className="w-9 h-9 rounded-full bg-slate-200 overflow-hidden shadow-inner">
+            <div className="w-9 h-9 rounded-full bg-slate-200 overflow-hidden shadow-inner flex-shrink-0">
               <img src={user?.picture || "https://api.dicebear.com/7.x/avataaars/svg?seed=Glass"} alt="avatar" />
             </div>
-            <span className="text-sm font-semibold text-slate-700 truncate max-w-[120px]">{user?.name || t.guestUser}</span>
+            <div className="flex flex-col items-start leading-tight">
+              <span className="text-sm font-semibold text-slate-700 truncate max-w-[120px]">{user?.name || t.guestUser}</span>
+              {userRole === 'owner' && (
+                <span className="text-[10px] font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-orange-500 uppercase tracking-widest flex items-center gap-1 mt-0.5">
+                  <Crown size={12} className="text-amber-500"/> Owner
+                </span>
+              )}
+              {userRole === 'admin' && (
+                <span className="text-[10px] font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-cyan-500 uppercase tracking-widest flex items-center gap-1 mt-0.5">
+                  <ShieldCheck size={12} className="text-blue-500"/> Admin
+                </span>
+              )}
+            </div>
           </div>
           <button onClick={handleLogout} className="bg-red-50 hover:bg-red-500 hover:text-white text-red-500 p-3 rounded-2xl transition-all shadow-sm border border-red-100">
             <LogOut size={18} />
