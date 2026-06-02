@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts';
-import { Plus, Trash2, ArrowRight, Zap, Download, Wifi, ArrowLeft, AlertTriangle, Cpu, Activity, Settings2, LogOut, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { Plus, Trash2, ArrowRight, Zap, Download, Wifi, ArrowLeft, AlertTriangle, Cpu, Activity, Settings2, LogOut, ShieldCheck, CheckCircle2, Coffee, X, ScanLine, MessageSquare, Send, UserCog, MailOpen } from 'lucide-react';
 import { GoogleLogin, googleLogout } from '@react-oauth/google';
+import { db } from './firebase';
+import { collection, addDoc, getDocs, deleteDoc, serverTimestamp, query, orderBy, doc, getDoc, setDoc } from 'firebase/firestore';
 
 const API_ENDPOINT = "https://ev-dashboard-j1l5.onrender.com/api/voltage";
 
@@ -96,6 +98,10 @@ export default function App() {
     const saved = localStorage.getItem('ev_user');
     return saved ? 'devices' : 'login';
   });
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportText, setReportText] = useState("");
+  const [showDonateModal, setShowDonateModal] = useState(false);
   const [lang, setLang] = useState('GB');
   const [isOnline, setIsOnline] = useState(true);
   const [mode, setMode] = useState('');
@@ -209,6 +215,36 @@ export default function App() {
   }, [voltage, posShort, negShort, activeDeviceId]);
 
   // Real API Fetch Logic
+  // Admin Check
+  useEffect(() => {
+    const checkAdmin = async () => {
+      if (user?.email) {
+        try {
+          // Check if admins collection is completely empty
+          const adminSnapshot = await getDocs(collection(db, "admins"));
+          if (adminSnapshot.empty) {
+            // First user ever becomes master admin automatically!
+            await setDoc(doc(db, "admins", user.email), { role: "master", addedAt: serverTimestamp() });
+            setIsAdmin(true);
+            return;
+          }
+
+          const adminDoc = await getDoc(doc(db, "admins", user.email));
+          if (adminDoc.exists()) {
+            setIsAdmin(true);
+          } else {
+            setIsAdmin(false);
+          }
+        } catch (e) {
+          console.error("Error checking admin:", e);
+        }
+      } else {
+        setIsAdmin(false);
+      }
+    };
+    checkAdmin();
+  }, [user]);
+
   useEffect(() => {
     if (!user && screen !== 'login') {
       setScreen('login');
@@ -336,7 +372,12 @@ export default function App() {
             <ShieldCheck size={18} /> {t.secureSession}
           </div>
         ) : <div />}
-        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3">
+          {isAdmin && (
+            <button onClick={() => setScreen('admin')} className="hidden sm:flex items-center gap-2 bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-2 rounded-xl text-sm font-bold transition-all shadow-sm">
+              <UserCog size={16} /> {t.adminBtn || "Admin"}
+            </button>
+          )}
           <div className="flex items-center gap-3 bg-white/60 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/80 shadow-sm">
             <div className="w-9 h-9 rounded-full bg-slate-200 overflow-hidden shadow-inner">
               <img src={user?.picture || "https://api.dicebear.com/7.x/avataaars/svg?seed=Glass"} alt="avatar" />
@@ -375,6 +416,11 @@ export default function App() {
       clear: "ปกติ",
       chartTitle: "กราฟประวัติแรงดันไฟฟ้า",
       noHistory: "ไม่มีประวัติ เปิดใช้งานบันทึกอัตโนมัติเพื่อบันทึกข้อมูล",
+      donateBtn: "สนับสนุน",
+      donateTitle: "สนับสนุนค่าน้ำชา ☕️",
+      donateDesc: "ช่วยสนับสนุนผู้พัฒนาเพื่อต่อยอดฟีเจอร์ใหม่ๆ และดูแลเซิร์ฟเวอร์",
+      reportBtn: "แจ้งปัญหา",
+      adminBtn: "แอดมินบอร์ด",
       saveNow: "บันทึกตอนนี้",
       autoSaveTitle: "ตั้งค่าบันทึกอัตโนมัติ",
       seconds: "วินาที",
@@ -423,6 +469,11 @@ export default function App() {
       clear: "CLEAR",
       chartTitle: "Voltage History Chart",
       noHistory: "No history. Enable Auto Save to record data.",
+      donateBtn: "Support",
+      donateTitle: "Buy me a coffee ☕️",
+      donateDesc: "Help me keep this project alive and add more features!",
+      reportBtn: "Report Issue",
+      adminBtn: "Admin Panel",
       saveNow: "Save Now",
       autoSaveTitle: "Auto Save Settings",
       seconds: "Seconds",
@@ -471,6 +522,11 @@ export default function App() {
       clear: "正常",
       chartTitle: "电压历史图表",
       noHistory: "暂无历史记录。启用自动保存以记录数据。",
+      donateBtn: "支持",
+      donateTitle: "请我喝杯咖啡 ☕️",
+      donateDesc: "帮助我保持这个项目的活跃并添加更多功能！",
+      reportBtn: "报告问题",
+      adminBtn: "管理面板",
       saveNow: "立即保存",
       autoSaveTitle: "自动保存设置",
       seconds: "秒",
@@ -519,6 +575,11 @@ export default function App() {
       clear: "正常",
       chartTitle: "電圧履歴チャート",
       noHistory: "履歴なし。自動保存を有効にしてデータを記録してください。",
+      donateBtn: "サポート",
+      donateTitle: "コーヒーをおごる ☕️",
+      donateDesc: "このプロジェクトを継続し、機能を追加するためにご支援ください！",
+      reportBtn: "問題を報告",
+      adminBtn: "管理パネル",
       saveNow: "今すぐ保存",
       autoSaveTitle: "自動保存設定",
       seconds: "秒",
@@ -552,6 +613,232 @@ export default function App() {
   useEffect(() => {
     document.title = t.title;
   }, [t.title]);
+
+  const SupportFeatures = () => (
+    <>
+      <div className="fixed bottom-6 right-6 z-40 flex flex-col gap-3 items-end">
+        <button 
+          onClick={() => setShowReportModal(true)}
+          className="bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 p-3 rounded-full shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex items-center gap-2 group"
+        >
+          <span className="font-bold hidden md:block max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-500 whitespace-nowrap px-0 group-hover:px-2 text-sm">
+            {t.reportBtn || "Report"}
+          </span>
+          <MessageSquare size={20} className="text-blue-500" />
+        </button>
+
+        <button 
+          onClick={() => setShowDonateModal(true)}
+          className="bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-white p-4 rounded-full shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex items-center gap-2 group"
+        >
+          <Coffee size={24} className="group-hover:animate-bounce" />
+          <span className="font-bold hidden md:block max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-500 whitespace-nowrap px-0 group-hover:px-2">
+            {t.donateBtn || "Support"}
+          </span>
+        </button>
+      </div>
+
+      {showDonateModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white/90 backdrop-blur-xl border border-white p-8 rounded-3xl shadow-2xl max-w-sm w-full relative animate-in zoom-in-95 duration-300">
+            <button 
+              onClick={() => setShowDonateModal(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 bg-slate-100 hover:bg-slate-200 p-2 rounded-full transition-colors"
+            >
+              <X size={20} />
+            </button>
+            
+            <div className="flex flex-col items-center text-center">
+              <div className="w-16 h-16 bg-amber-100 text-amber-500 rounded-full flex items-center justify-center mb-4">
+                <Coffee size={32} />
+              </div>
+              <h3 className="text-2xl font-bold text-slate-800 mb-2">{t.donateTitle || "Support Project"}</h3>
+              <p className="text-slate-500 text-sm mb-6">{t.donateDesc || "Help me keep this project alive!"}</p>
+              
+              <div className="w-48 h-48 bg-slate-100 rounded-2xl mb-6 flex items-center justify-center border-2 border-dashed border-slate-300 overflow-hidden relative">
+                 <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400">
+                   <ScanLine size={48} className="mb-2 opacity-50" />
+                   <span className="text-xs font-semibold">QR Code</span>
+                 </div>
+                 {/* To insert a real QR, uncomment below and add the image URL */}
+                 {/* <img src="YOUR_PROMPTPAY_QR_URL" alt="PromptPay QR" className="w-full h-full object-cover relative z-10" /> */}
+              </div>
+              
+              <div className="w-full bg-slate-50 p-4 rounded-xl border border-slate-100 text-left">
+                <p className="text-xs text-slate-500 font-medium mb-1">PromptPay / Account</p>
+                <div className="flex justify-between items-center">
+                  <p className="text-sm font-bold text-slate-700 tracking-wide">093-959-6863</p>
+                  <button onClick={() => navigator.clipboard.writeText("0939596863")} className="text-xs text-blue-500 font-bold hover:underline">Copy</button>
+                </div>
+                <p className="text-xs font-medium text-slate-500 mt-1">ชื่อบัญชี: นายนันทยศ รอดอยู่</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+
+  const ReportModal = () => {
+    if (!showReportModal) return null;
+    const handleSubmit = async () => {
+      if (!reportText.trim()) return;
+      try {
+        await addDoc(collection(db, "messages"), {
+          text: reportText,
+          senderName: user?.name || "Anonymous",
+          senderEmail: user?.email || "No Email",
+          createdAt: serverTimestamp(),
+          status: "unread"
+        });
+        setReportText("");
+        setShowReportModal(false);
+        alert("ส่งข้อความเรียบร้อยแล้ว! (Message Sent)");
+      } catch (e) {
+        alert("เกิดข้อผิดพลาดในการส่งข้อความ: " + e.message);
+      }
+    };
+    return (
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-300">
+        <div className="bg-white/90 backdrop-blur-xl border border-white p-6 rounded-3xl shadow-2xl max-w-md w-full relative animate-in zoom-in-95 duration-300">
+          <button onClick={() => setShowReportModal(false)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 bg-slate-100 hover:bg-slate-200 p-2 rounded-full transition-colors">
+            <X size={20} />
+          </button>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 bg-red-100 text-red-500 rounded-full flex items-center justify-center">
+              <MessageSquare size={24} />
+            </div>
+            <h3 className="text-xl font-bold text-slate-800">{t.reportBtn || "Report Issue"}</h3>
+          </div>
+          <textarea 
+            value={reportText}
+            onChange={(e) => setReportText(e.target.value)}
+            placeholder="อธิบายปัญหาที่พบ หรือข้อเสนอแนะ..."
+            className="w-full h-32 p-4 rounded-xl border border-slate-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none mb-4 text-slate-700"
+          ></textarea>
+          <button onClick={handleSubmit} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-md flex justify-center items-center gap-2">
+            <Send size={18} /> ส่งข้อความ
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  const AdminDashboardScreen = () => {
+    const [messages, setMessages] = useState([]);
+    const [admins, setAdmins] = useState([]);
+    const [newAdminEmail, setNewAdminEmail] = useState("");
+    const [activeTab, setActiveTab] = useState("messages");
+
+    useEffect(() => {
+      const fetchData = async () => {
+        try {
+          const msgQ = query(collection(db, "messages"), orderBy("createdAt", "desc"));
+          const msgSnapshot = await getDocs(msgQ);
+          setMessages(msgSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+          
+          const adminSnapshot = await getDocs(collection(db, "admins"));
+          setAdmins(adminSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        } catch (e) {
+          console.error("Admin fetch error", e);
+        }
+      };
+      fetchData();
+    }, []);
+
+    const handleAddAdmin = async () => {
+      if (!newAdminEmail.trim() || !newAdminEmail.includes("@")) return;
+      await setDoc(doc(db, "admins", newAdminEmail), { role: "admin", addedAt: serverTimestamp() });
+      setNewAdminEmail("");
+      const adminSnapshot = await getDocs(collection(db, "admins"));
+      setAdmins(adminSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    };
+
+    const handleDeleteMsg = async (id) => {
+      if (!window.confirm("Delete this message?")) return;
+      await deleteDoc(doc(db, "messages", id));
+      setMessages(messages.filter(m => m.id !== id));
+    };
+
+    const handleDeleteAdmin = async (id) => {
+      if (!window.confirm("Remove this admin?")) return;
+      if (id === user.email) {
+         alert("Cannot remove yourself!"); return;
+      }
+      await deleteDoc(doc(db, "admins", id));
+      setAdmins(admins.filter(a => a.id !== id));
+    };
+
+    return (
+      <div className="min-h-screen p-4 md:p-8 max-w-5xl mx-auto flex flex-col relative z-10">
+        <AmbientBackground />
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 bg-white/60 backdrop-blur-md p-4 rounded-2xl border border-white shadow-sm gap-4">
+          <div className="flex items-center gap-3">
+             <button onClick={() => setScreen('devices')} className="p-2 bg-white/80 hover:bg-white rounded-full text-slate-600 transition-all shadow-sm">
+                <ArrowLeft size={20} />
+             </button>
+             <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-2"><UserCog size={28} className="text-blue-600"/> Admin Panel</h2>
+          </div>
+          <div className="flex bg-slate-200/50 p-1 rounded-xl w-full md:w-auto">
+            <button onClick={() => setActiveTab('messages')} className={`flex-1 md:flex-none px-4 py-2 rounded-lg font-semibold transition-all ${activeTab === 'messages' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500 hover:text-slate-700'}`}>Messages</button>
+            <button onClick={() => setActiveTab('admins')} className={`flex-1 md:flex-none px-4 py-2 rounded-lg font-semibold transition-all ${activeTab === 'admins' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500 hover:text-slate-700'}`}>Admins</button>
+          </div>
+        </div>
+
+        <div className="flex-1 glass-panel p-6 overflow-hidden flex flex-col">
+          {activeTab === 'messages' && (
+            <div className="flex-1 overflow-auto">
+               <h3 className="text-lg font-bold mb-4 text-slate-700 flex items-center gap-2"><MailOpen size={20}/> User Feedback</h3>
+               {messages.length === 0 ? (
+                 <div className="text-center text-slate-500 py-10">No messages yet.</div>
+               ) : (
+                 <div className="grid gap-4">
+                   {messages.map(msg => (
+                     <div key={msg.id} className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm relative pr-12">
+                       <button onClick={() => handleDeleteMsg(msg.id)} className="absolute top-4 right-4 text-slate-400 hover:text-red-500"><Trash2 size={18}/></button>
+                       <p className="font-bold text-slate-800">{msg.senderName} <span className="text-xs font-normal text-slate-500 ml-2">{msg.senderEmail}</span></p>
+                       <p className="text-xs text-slate-400 mb-2">{msg.createdAt?.toDate ? msg.createdAt.toDate().toLocaleString() : 'Just now'}</p>
+                       <p className="text-slate-600 bg-slate-50 p-3 rounded-lg text-sm">{msg.text}</p>
+                     </div>
+                   ))}
+                 </div>
+               )}
+            </div>
+          )}
+
+          {activeTab === 'admins' && (
+            <div className="flex-1 overflow-auto">
+               <h3 className="text-lg font-bold mb-4 text-slate-700 flex items-center gap-2"><ShieldCheck size={20}/> Manage Admins</h3>
+               
+               <div className="flex gap-2 mb-6">
+                 <input type="email" value={newAdminEmail} onChange={e => setNewAdminEmail(e.target.value)} placeholder="Email address..." className="flex-1 px-4 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                 <button onClick={handleAddAdmin} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-bold transition-all shadow-sm flex items-center gap-2"><Plus size={18}/> Add</button>
+               </div>
+
+               <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
+                 <table className="w-full text-left text-sm">
+                   <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-100">
+                     <tr><th className="p-4">Email</th><th className="p-4">Role</th><th className="p-4 w-20 text-center">Action</th></tr>
+                   </thead>
+                   <tbody>
+                     {admins.map(admin => (
+                       <tr key={admin.id} className="border-b border-slate-50 last:border-0 hover:bg-slate-50">
+                         <td className="p-4 font-medium text-slate-700 break-all">{admin.id}</td>
+                         <td className="p-4"><span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-lg uppercase tracking-wide">{admin.role}</span></td>
+                         <td className="p-4 text-center">
+                           <button onClick={() => handleDeleteAdmin(admin.id)} className="text-slate-400 hover:text-red-500 p-2 rounded-lg hover:bg-red-50"><Trash2 size={18}/></button>
+                         </td>
+                       </tr>
+                     ))}
+                   </tbody>
+                 </table>
+               </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
 
   // Screens
   // Using GoogleLogin component for better mobile support instead of useGoogleLogin hook
@@ -609,6 +896,8 @@ export default function App() {
       <div className="min-h-screen p-6 md:p-12 max-w-5xl mx-auto relative z-10 flex flex-col">
         <AmbientBackground />
         <TopBar />
+        <SupportFeatures />
+        <ReportModal />
         
         <div className="flex-1 flex flex-col items-center justify-center -mt-10">
           <div className="text-center mb-10">
@@ -722,6 +1011,8 @@ export default function App() {
       <div className="min-h-screen p-6 md:p-12 max-w-5xl mx-auto relative z-10 flex flex-col">
         <AmbientBackground />
         <TopBar showPill={false} />
+        <SupportFeatures />
+        <ReportModal />
 
         <div className="flex-1 flex flex-col justify-center -mt-10">
           <div className="text-center mb-12">
@@ -762,6 +1053,8 @@ export default function App() {
     return (
       <div className="min-h-screen flex items-center justify-center relative z-20 p-6">
         <AmbientBackground />
+        <SupportFeatures />
+        <ReportModal />
         <div className="glass-panel p-10 w-full max-w-2xl relative text-center">
           <h2 className="text-3xl font-bold mb-10 text-slate-800 tracking-tight">{t.rangeTitle}</h2>
           
@@ -792,6 +1085,8 @@ export default function App() {
     return (
       <div className="min-h-screen p-4 md:p-8 max-w-7xl mx-auto flex flex-col relative z-10">
         <AmbientBackground />
+        <SupportFeatures />
+        <ReportModal />
         
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
