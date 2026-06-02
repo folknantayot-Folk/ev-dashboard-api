@@ -916,7 +916,7 @@ export default function App() {
         <AmbientBackground />
         <TopBar />
         <SupportFeatures />
-        <ReportModal />
+        {ReportModal()}
         
         <div className="flex-1 flex flex-col items-center justify-center -mt-10">
           <div className="text-center mb-10">
@@ -1031,7 +1031,7 @@ export default function App() {
         <AmbientBackground />
         <TopBar showPill={false} />
         <SupportFeatures />
-        <ReportModal />
+        {ReportModal()}
 
         <div className="flex-1 flex flex-col justify-center -mt-10">
           <div className="text-center mb-12">
@@ -1073,7 +1073,7 @@ export default function App() {
       <div className="min-h-screen flex items-center justify-center relative z-20 p-6">
         <AmbientBackground />
         <SupportFeatures />
-        <ReportModal />
+        {ReportModal()}
         <div className="glass-panel p-10 w-full max-w-2xl relative text-center">
           <h2 className="text-3xl font-bold mb-10 text-slate-800 tracking-tight">{t.rangeTitle}</h2>
           
@@ -1105,7 +1105,7 @@ export default function App() {
       <div className="min-h-screen p-4 md:p-8 max-w-7xl mx-auto flex flex-col relative z-10">
         <AmbientBackground />
         <SupportFeatures />
-        <ReportModal />
+        {ReportModal()}
         
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
