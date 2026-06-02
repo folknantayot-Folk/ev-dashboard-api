@@ -680,13 +680,8 @@ export default function App() {
               <h3 className="text-2xl font-bold text-slate-800 mb-2">{t.donateTitle || "Support Project"}</h3>
               <p className="text-slate-500 text-sm mb-6">{t.donateDesc || "Help me keep this project alive!"}</p>
               
-              <div className="w-48 h-48 bg-slate-100 rounded-2xl mb-6 flex items-center justify-center border-2 border-dashed border-slate-300 overflow-hidden relative">
-                 <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400">
-                   <ScanLine size={48} className="mb-2 opacity-50" />
-                   <span className="text-xs font-semibold">QR Code</span>
-                 </div>
-                 {/* To insert a real QR, uncomment below and add the image URL */}
-                 {/* <img src="YOUR_PROMPTPAY_QR_URL" alt="PromptPay QR" className="w-full h-full object-cover relative z-10" /> */}
+               <div className="w-48 h-48 bg-slate-100 rounded-2xl mb-6 flex items-center justify-center border-2 border-slate-300 overflow-hidden relative shadow-inner p-2">
+                 <img src="https://promptpay.io/0939596863.png" alt="PromptPay QR" className="w-full h-full object-contain relative z-10 rounded-xl" />
               </div>
               
               <div className="w-full bg-slate-50 p-4 rounded-xl border border-slate-100 text-left">
