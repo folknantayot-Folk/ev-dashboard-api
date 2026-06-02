@@ -161,8 +161,8 @@ export default function App() {
                 
                 if (d.lastSeenString === currentString) {
                   const unchangedCount = (d.unchangedCount || 0) + 1;
-                  // ถ้าซ้ำเกิน 2 รอบ (400ms) ให้ถือว่าตาย
-                  return { ...d, isOnline: unchangedCount <= 2, unchangedCount };
+                  // ถ้าไม่มีข้อมูลใหม่เข้ามาเกิน 3 วินาที ให้ตัดเป็น OFFLINE ทันที
+                  return { ...d, isOnline: unchangedCount <= 3, unchangedCount };
                 } else {
                   // ข้อมูลใหม่มา รีเซ็ตการนับและตั้งเป็น ONLINE
                   return { ...d, isOnline: true, lastSeenString: currentString, unchangedCount: 0 };
@@ -181,7 +181,7 @@ export default function App() {
           }
         }
       });
-    }, 200); // ดึงข้อมูลทุกๆ 200ms เพื่อความเรียลไทม์สูงสุด
+    }, 1000); // กลับมาดึงข้อมูลทุกๆ 1 วินาที (เสถียรที่สุด)
 
     return () => { 
       isMounted = false; 
@@ -279,8 +279,8 @@ export default function App() {
               
               if (localLastSeen === currentString) {
                 localUnchangedCount++;
-                if (localUnchangedCount > 2) {
-                  setVoltage(0); // ตัดค่าเป็น 0 ถ้าออฟไลน์เกิน 3 รอบ (600ms)
+                if (localUnchangedCount > 3) { // ถ้านิ่งเกิน 3 วินาที
+                  setVoltage(0); // ตัดเข็มเป็น 0 
                 }
               } else {
                 localLastSeen = currentString;
@@ -296,7 +296,7 @@ export default function App() {
           console.error("Backend fetch failed:", err);
           setVoltage(0);
         }
-      }, 200); // อัปเดตทุก 200ms เพื่อความเรียลไทม์สูงสุด
+      }, 1000); // กลับมาดึงข้อมูลทุกๆ 1 วินาที (เสถียรที่สุด)
     }
     return () => clearInterval(interval);
   }, [screen, range]);
