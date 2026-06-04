@@ -15,6 +15,7 @@ CORS(app)
 devices_data = {}
 device_subscriptions = {} # { "device_id": "user@email.com" }
 device_last_alert = {} # { "device_id": datetime_object }
+pending_commands = {} # { "device_id": "command_string" }
 
 import urllib.request
 import json
@@ -67,6 +68,20 @@ def subscribe_alert():
     device_subscriptions[device_id] = email
     return jsonify({"message": f"Successfully subscribed {email} to {device_id}"}), 200
 
+@app.route('/api/command', methods=['POST', 'OPTIONS'])
+def handle_command():
+    if request.method == 'OPTIONS':
+        return jsonify({}), 200
+    data = request.json
+    device_id = data.get('device_id')
+    command = data.get('command')
+    
+    if not device_id or not command:
+        return jsonify({"error": "Missing device_id or command"}), 400
+        
+    pending_commands[device_id] = command
+    return jsonify({"message": f"Command '{command}' queued for {device_id}", "status": "success"}), 200
+
 @app.route('/api/voltage', methods=['GET', 'POST', 'OPTIONS'])
 def handle_voltage():
     if request.method == 'OPTIONS':
@@ -105,7 +120,13 @@ def handle_voltage():
                     # Start thread to send email asynchronously
                     threading.Thread(target=send_alert_email_async, args=(receiver_email, device_id, posShort, negShort)).start()
         
-        return jsonify({"message": "Data received successfully", "status": "success"}), 200
+        response_payload = {"message": "Data received successfully", "status": "success"}
+        
+        # Check if there is a pending command for this device
+        if device_id in pending_commands:
+            response_payload["command"] = pending_commands.pop(device_id)
+            
+        return jsonify(response_payload), 200
         
     elif request.method == 'GET':
         # The React frontend fetches data from here
