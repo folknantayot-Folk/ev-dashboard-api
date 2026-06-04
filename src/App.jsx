@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts';
-import { Plus, Trash2, ArrowRight, Zap, Download, Wifi, ArrowLeft, AlertTriangle, Cpu, Activity, Settings2, LogOut, ShieldCheck, CheckCircle2, Coffee, X, ScanLine, MessageSquare, Send, UserCog, MailOpen, Crown } from 'lucide-react';
+import { Plus, Trash2, ArrowRight, Zap, Download, Wifi, ArrowLeft, AlertTriangle, Cpu, Activity, Settings2, LogOut, ShieldCheck, CheckCircle2, Coffee, X, ScanLine, MessageSquare, Send, UserCog, MailOpen, Crown, RefreshCw } from 'lucide-react';
 import { GoogleLogin, googleLogout } from '@react-oauth/google';
 import { db } from './firebase';
 import { collection, addDoc, getDocs, deleteDoc, serverTimestamp, query, orderBy, doc, getDoc, setDoc } from 'firebase/firestore';
@@ -1126,9 +1126,26 @@ export default function App() {
              </button>
              <h1 className="text-2xl font-bold text-slate-800 tracking-tight">{t.dashboard}</h1>
           </div>
-          <div className="flex items-center gap-2 bg-green-50 px-4 py-2 rounded-full border border-green-200">
-            <Wifi size={16} className="text-green-500" />
-            <span className="text-green-600 font-semibold text-sm">{t.live}</span>
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={async () => {
+                try {
+                  const res = await fetch(`${API_ENDPOINT.replace('/voltage', '/command')}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ device_id: activeDeviceId, command: 'reset' })
+                  });
+                  if(res.ok) alert('สั่งรีเซ็ตบอร์ดแล้ว! (รอสักครู่บอร์ดจะรับคำสั่งและรีสตาร์ท)');
+                } catch(e) { console.error(e); }
+              }}
+              className="flex items-center gap-2 bg-white hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-full border border-slate-200 transition-colors shadow-sm font-semibold text-sm"
+            >
+              <RefreshCw size={16} className="text-blue-500" /> รีเซ็ตบอร์ด
+            </button>
+            <div className="flex items-center gap-2 bg-green-50 px-4 py-2 rounded-full border border-green-200">
+              <Wifi size={16} className="text-green-500" />
+              <span className="text-green-600 font-semibold text-sm">{t.live}</span>
+            </div>
           </div>
         </div>
 
