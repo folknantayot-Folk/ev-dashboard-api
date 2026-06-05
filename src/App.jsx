@@ -1355,23 +1355,25 @@ export default function App() {
                         </td>
                         <td className="py-3 px-4">
                           {(() => {
-                            if (h.posShort) {
+                            if (!h.posShort && !h.negShort) {
                               return (
-                                <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-red-50 text-red-600 border border-red-200 rounded-full text-xs font-bold tracking-wide">
-                                  <AlertTriangle size={14} /> {t.posShortTitle.toUpperCase()}
-                                </div>
-                              );
-                            }
-                            if (h.negShort) {
-                              return (
-                                <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-red-50 text-red-600 border border-red-200 rounded-full text-xs font-bold tracking-wide">
-                                  <AlertTriangle size={14} /> {t.negShortTitle.toUpperCase()}
+                                <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-50 text-green-600 border border-green-200 rounded-full text-xs font-bold tracking-wide">
+                                  <CheckCircle2 size={14} /> {t.normal.toUpperCase()}
                                 </div>
                               );
                             }
                             return (
-                              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-50 text-green-600 border border-green-200 rounded-full text-xs font-bold tracking-wide">
-                                <CheckCircle2 size={14} /> {t.normal.toUpperCase()}
+                              <div className="flex flex-col gap-1 items-start">
+                                {h.posShort && (
+                                  <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-red-50 text-red-600 border border-red-200 rounded-full text-xs font-bold tracking-wide whitespace-nowrap">
+                                    <AlertTriangle size={14} /> {t.posShortTitle.toUpperCase()}
+                                  </div>
+                                )}
+                                {h.negShort && (
+                                  <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-red-50 text-red-600 border border-red-200 rounded-full text-xs font-bold tracking-wide whitespace-nowrap">
+                                    <AlertTriangle size={14} /> {t.negShortTitle.toUpperCase()}
+                                  </div>
+                                )}
                               </div>
                             );
                           })()}
