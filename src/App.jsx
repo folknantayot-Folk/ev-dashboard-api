@@ -199,6 +199,7 @@ export default function App() {
   
   const [posShort, setPosShort] = useState(false);
   const [negShort, setNegShort] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const posShortRef = React.useRef(false);
   const negShortRef = React.useRef(false);
