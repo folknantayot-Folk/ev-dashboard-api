@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts';
-import { Plus, Trash2, ArrowRight, Zap, Download, Wifi, ArrowLeft, AlertTriangle, Cpu, Activity, Settings2, LogOut, ShieldCheck, CheckCircle2, Coffee, X, ScanLine, MessageSquare, Send, UserCog, MailOpen, Crown, RefreshCw } from 'lucide-react';
+import { Plus, Trash2, ArrowRight, Zap, Download, Wifi, ArrowLeft, AlertTriangle, Cpu, Activity, Settings2, LogOut, ShieldCheck, CheckCircle2, Coffee, X, ScanLine, MessageSquare, Send, UserCog, MailOpen, Crown, RefreshCw, Search } from 'lucide-react';
 import { GoogleLogin, googleLogout } from '@react-oauth/google';
 import { db } from './firebase';
 import { collection, addDoc, getDocs, deleteDoc, serverTimestamp, query, orderBy, doc, getDoc, setDoc } from 'firebase/firestore';
@@ -482,6 +482,8 @@ export default function App() {
       critical: "อันตราย",
       warning: "ระวัง",
       normal: "ปกติ",
+      resetBoard: "รีเซ็ตบอร์ด",
+      searchPlaceholder: "ค้นหาอุปกรณ์...",
     },
     GB: {
       title: "Voltage Monitoring System",
@@ -535,6 +537,8 @@ export default function App() {
       critical: "CRITICAL",
       warning: "WARNING",
       normal: "NORMAL",
+      resetBoard: "Reset Board",
+      searchPlaceholder: "Search devices...",
     },
     CN: {
       title: "电压监测系统",
@@ -588,6 +592,8 @@ export default function App() {
       critical: "危险",
       warning: "警告",
       normal: "正常",
+      resetBoard: "重置板子",
+      searchPlaceholder: "搜索设备...",
     },
     JP: {
       title: "電圧モニタリングシステム",
@@ -641,6 +647,8 @@ export default function App() {
       critical: "危険",
       warning: "警告",
       normal: "正常",
+      resetBoard: "ボードをリセット",
+      searchPlaceholder: "デバイスを検索...",
     }
   };
   const t = textData[lang] || textData.GB;
@@ -938,6 +946,13 @@ export default function App() {
           <div className="glass-panel p-8 w-full max-w-lg transition-all duration-500">
              <div className="flex justify-between items-center mb-6">
                 <span className="font-bold text-slate-700 text-lg">{t.devices}</span>
+                <input 
+                   type="text" 
+                   placeholder={t.searchPlaceholder} 
+                   value={searchQuery}
+                   onChange={e => setSearchQuery(e.target.value)}
+                   className="w-48 text-sm px-3 py-1.5 rounded-lg border border-slate-200 outline-none"
+                />
                 {!showAddForm && (
                   <button onClick={() => setShowAddForm(true)} className="glass-btn px-4 py-1.5 text-sm font-semibold flex items-center gap-2 text-blue-600 hover:text-blue-700">
                     <Plus size={16} /> {t.addDevice}
@@ -987,7 +1002,9 @@ export default function App() {
                </div>
              ) : (!showAddForm && (
                <div className="space-y-3 mb-8">
-                 {devicesList.map((dev, idx) => (
+                 {devicesList
+                  .filter(dev => !searchQuery || dev.id.toLowerCase().includes(searchQuery.toLowerCase()) || dev.name.toLowerCase().includes(searchQuery.toLowerCase()))
+                  .map((dev, idx) => (
                    <div 
                      key={idx} 
                      onClick={() => {
@@ -1127,6 +1144,16 @@ export default function App() {
              <h1 className="text-2xl font-bold text-slate-800 tracking-tight">{t.dashboard}</h1>
           </div>
           <div className="flex items-center gap-3">
+            <div className="relative">
+              <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                placeholder={t.searchPlaceholder}
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="pl-10 pr-4 py-2 border border-slate-200 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm shadow-sm"
+              />
+            </div>
             <button 
               onClick={async () => {
                 try {
@@ -1140,7 +1167,7 @@ export default function App() {
               }}
               className="flex items-center gap-2 bg-white hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-full border border-slate-200 transition-colors shadow-sm font-semibold text-sm"
             >
-              <RefreshCw size={16} className="text-blue-500" /> รีเซ็ตบอร์ด
+              <RefreshCw size={16} className="text-blue-500" /> {t.resetBoard}
             </button>
             <div className="flex items-center gap-2 bg-green-50 px-4 py-2 rounded-full border border-green-200">
               <Wifi size={16} className="text-green-500" />
@@ -1181,13 +1208,13 @@ export default function App() {
                  <button 
                    onClick={() => {
                      const now = new Date();
-                     setHistory(prev => [...prev, { 
+                     setHistory(prev => ({...prev, [activeDeviceId]: [...(prev[activeDeviceId] || []), { 
                        time: now.toLocaleTimeString('th-TH'), 
                        fullDate: `${now.toLocaleDateString('th-TH')} ${now.toLocaleTimeString('th-TH')}`,
                        voltage: parseFloat(voltage.toFixed(2)),
                        posShort: posShort,
                        negShort: negShort
-                     }]);
+                     }]}));
                    }}
                    className="glass-btn py-3.5 flex items-center justify-center gap-2 font-semibold"
                  >
